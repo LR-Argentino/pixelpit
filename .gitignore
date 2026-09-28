@@ -1,0 +1,71 @@
+# Root .gitignore für das Modulith-Projekt.
+# Modul-spezifische Regeln stehen in frontend/.gitignore und backend/.gitignore.
+# Hier nur, was beide Module bzw. das Root-Verzeichnis betrifft.
+
+### Betriebssystem ###
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+### IntelliJ IDEA / JetBrains ###
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+### Visual Studio Code ###
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+### Eclipse / STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+### Java / Maven ###
+target/
+.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
+
+### Node / Angular ###
+node_modules/
+dist/
+tmp/
+out-tsc/
+.angular/
+coverage/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+### Logs & Laufzeit ###
+*.log
+logs/
+*.pid
+hs_err_pid*
+replay_pid*
+
+### Umgebung & Secrets ###
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.jks
+application-local.properties
+application-local.yml
+application-local.yaml

@@ -69,3 +69,6 @@ replay_pid*
 application-local.properties
 application-local.yml
 application-local.yaml
+
+### AI Artefakte ###
+.serena/

@@ -1,9 +1,22 @@
 services:
   postgres:
-    image: 'postgres:latest'
+    image: 'postgres:18.4'
     environment:
-      - 'POSTGRES_DB=mydatabase'
+      - 'POSTGRES_USER=${POSTGRES_USER}'
+      - 'POSTGRES_DB=${POSTGRES_DB}'
       - 'POSTGRES_PASSWORD=${POSTGRES_PW}'
-      - 'POSTGRES_USER=myuser'
     ports:
-      - '5432'
+      - '5432:5432'
+    volumes:
+      - 'pgdata:/var/lib/postgresql'
+      - './src/main/resources/db-scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro'
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+
+volumes:
+  pgdata:

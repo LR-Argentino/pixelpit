@@ -4,3 +4,8 @@ spring:
   docker:
     compose:
       lifecycle-management: start_only
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: true

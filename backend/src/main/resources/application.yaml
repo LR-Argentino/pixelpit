@@ -9,3 +9,11 @@ spring:
       ddl-auto: validate
     open-in-view: false
     show-sql: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/pixelpit
+server:
+  port: 8081

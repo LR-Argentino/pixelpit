@@ -3,20 +3,11 @@ import {provideRouter} from '@angular/router';
 import {routes} from './app.routes';
 import {provideKeycloak} from 'keycloak-angular';
 import {provideHttpClient} from '@angular/common/http';
+import {keycloakConfig} from './keycloak.config';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideKeycloak({
-      config: {
-        url: 'http://localhost:8080',
-        realm: 'pixelpit',
-        clientId: 'my-app'
-      },
-      initOptions: {
-        onLoad: 'login-required',
-        checkLoginIframe: false
-      }
-    }),
+    provideKeycloak(keycloakConfig()),
     provideBrowserGlobalErrorListeners(),
     provideHttpClient(),
     provideRouter(routes)

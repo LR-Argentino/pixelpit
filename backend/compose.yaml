@@ -23,6 +23,9 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_PW}
     command:
       - start-dev
+      - --import-realm
+    volumes:
+      - ./src/main/resources/keycloak-realm:/opt/keycloak/data/import:ro
     ports:
       - '8080:8080'
 

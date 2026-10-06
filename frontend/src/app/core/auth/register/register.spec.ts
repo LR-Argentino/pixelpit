@@ -1,0 +1,170 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Register } from './register';
+
+describe('Register', () => {
+  let component: Register;
+  let fixture: ComponentFixture<Register>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [Register],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(Register);
+    component = fixture.componentInstance;
+    await fixture.whenStable();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  describe('username validation', () => {
+    const usernameErrorKinds = (value: string) => {
+      const usernameField = component['registerForm'].username;
+      usernameField().value.set(value);
+      const kinds = usernameField().errors().map((error) => error.kind);
+      console.log(`username "${value}" -> errors: [${kinds.join(', ')}]`);
+      return kinds;
+    };
+
+    it('accepts alphanumeric usernames with at least 3 characters', () => {
+      expect(usernameErrorKinds('abc')).toEqual([]);
+      expect(usernameErrorKinds('VoxelVera42')).toEqual([]);
+    });
+
+    it('rejects usernames shorter than 3 characters', () => {
+      expect(usernameErrorKinds('ab')).toEqual(['minLength']);
+    });
+
+    it('accepts exactly 15 characters and rejects 16', () => {
+      expect(usernameErrorKinds('a'.repeat(15))).toEqual([]);
+      expect(usernameErrorKinds('a'.repeat(16))).toEqual(['maxLength']);
+    });
+
+    it('rejects usernames containing spaces', () => {
+      expect(usernameErrorKinds('voxel vera')).toEqual(['pattern']);
+      expect(usernameErrorKinds(' abc')).toEqual(['pattern']);
+    });
+
+    it('rejects usernames containing special characters', () => {
+      for (const value of ['voxel_vera', 'vera!', 'müller', 'a-b-c']) {
+        expect(usernameErrorKinds(value)).toEqual(['pattern']);
+      }
+    });
+
+    it('reports both errors for a short username with a special character', () => {
+      expect(usernameErrorKinds('a!')).toEqual(['minLength', 'pattern']);
+    });
+
+    it('reports only required for an empty username', () => {
+      expect(usernameErrorKinds('')).toEqual(['required']);
+    });
+
+    it('renders each error message once the field is touched', async () => {
+      const usernameField = component['registerForm'].username;
+      usernameField().value.set('a!');
+      usernameField().markAsTouched();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const messages = Array.from(
+        (fixture.nativeElement as HTMLElement).querySelectorAll('.text-red-500'),
+        (element) => element.textContent?.trim(),
+      );
+      console.log(`rendered username errors: ${JSON.stringify(messages)}`);
+      expect(messages).toEqual([
+        'Mindestens 3 Zeichen',
+        'Nur Buchstaben und Ziffern, keine Leer- oder Sonderzeichen',
+      ]);
+    });
+  });
+
+  describe('password validation', () => {
+    const passwordErrorKinds = (value: string) => {
+      const passwordField = component['registerForm'].password;
+      passwordField().value.set(value);
+      const kinds = passwordField().errors().map((error) => error.kind);
+      console.log(`password "${value}" -> errors: [${kinds.join(', ')}]`);
+      return kinds;
+    };
+
+    it('accepts a password with 8+ characters, uppercase, digit and special character', () => {
+      expect(passwordErrorKinds('Geheim1!')).toEqual([]);
+    });
+
+    it('reports only required for an empty password', () => {
+      expect(passwordErrorKinds('')).toEqual(['required']);
+    });
+
+    it('rejects passwords shorter than 8 characters', () => {
+      expect(passwordErrorKinds('Ab1!')).toEqual(['minLength']);
+    });
+
+    it('rejects passwords missing uppercase, digit or special character', () => {
+      for (const value of ['geheim12!', 'Geheimnis!', 'Geheimnis1']) {
+        expect(passwordErrorKinds(value)).toEqual(['strongPassword']);
+      }
+    });
+  });
+
+  describe('password repeat validation', () => {
+    const passwordReplyErrorKinds = (password: string, passwordReply: string) => {
+      const registerForm = component['registerForm'];
+      registerForm.password().value.set(password);
+      registerForm.passwordReply().value.set(passwordReply);
+      const kinds = registerForm.passwordReply().errors().map((error) => error.kind);
+      console.log(`password "${password}", repeat "${passwordReply}" -> errors: [${kinds.join(', ')}]`);
+      return kinds;
+    };
+
+    it('accepts a repeat equal to the password', () => {
+      expect(passwordReplyErrorKinds('Geheim1!', 'Geheim1!')).toEqual([]);
+    });
+
+    it('reports only required for an empty repeat', () => {
+      expect(passwordReplyErrorKinds('Geheim1!', '')).toEqual(['required']);
+    });
+
+    it('rejects a repeat that differs from the password', () => {
+      expect(passwordReplyErrorKinds('Geheim1!', 'Geheim1?')).toEqual(['fieldMismatch']);
+    });
+
+    it('re-validates the repeat when only the password changes', () => {
+      expect(passwordReplyErrorKinds('Geheim1!', 'Geheim1!')).toEqual([]);
+      component['registerForm'].password().value.set('Anders2?');
+      const kinds = component['registerForm'].passwordReply().errors().map((error) => error.kind);
+      console.log(`after password change -> repeat errors: [${kinds.join(', ')}]`);
+      expect(kinds).toEqual(['fieldMismatch']);
+    });
+  });
+
+  describe('email validation', () => {
+    const renderedEmailErrors = async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const emailContainer = (fixture.nativeElement as HTMLElement).querySelector('#signup-email')!.parentElement!;
+      const messages = Array.from(emailContainer.querySelectorAll('.text-red-500'), (element) => element.textContent?.trim());
+      console.log(`rendered email errors: ${JSON.stringify(messages)}`);
+      return messages;
+    };
+
+    it('reports required for an empty email and email for a malformed one', () => {
+      const emailField = component['registerForm'].email;
+      expect(emailField().errors().map((error) => error.kind)).toEqual(['required']);
+      emailField().value.set('vera@');
+      expect(emailField().errors().map((error) => error.kind)).toEqual(['email']);
+      emailField().value.set('vera@studio.dev');
+      expect(emailField().errors()).toEqual([]);
+    });
+
+    it('hides errors until the field is touched', async () => {
+      const emailField = component['registerForm'].email;
+      emailField().value.set('vera@');
+      expect(await renderedEmailErrors()).toEqual([]);
+
+      emailField().markAsTouched();
+      expect(await renderedEmailErrors()).toEqual(['Bitte eine E-Mail-Adresse eingeben.']);
+    });
+  });
+});

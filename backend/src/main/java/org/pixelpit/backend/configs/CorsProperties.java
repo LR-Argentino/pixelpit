@@ -1,4 +1,4 @@
-package org.pixelpit.backend;
+package org.pixelpit.backend.configs;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;

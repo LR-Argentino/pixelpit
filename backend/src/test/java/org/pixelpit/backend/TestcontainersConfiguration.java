@@ -7,12 +7,18 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @TestConfiguration(proxyBeanMethods = false)
-class TestcontainersConfiguration {
+public class TestcontainersConfiguration {
 
     @Bean
     @ServiceConnection
+    @SuppressWarnings("resource")
     PostgreSQLContainer postgresContainer() {
-        return new PostgreSQLContainer(DockerImageName.parse("postgres:18.4"));
+        return new PostgreSQLContainer(
+                DockerImageName.parse("postgres:18.4"))
+                .withDatabaseName("test")
+                .withUsername("test")
+                .withPassword("test")
+                .withReuse(true);
     }
 
 }

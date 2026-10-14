@@ -1,4 +1,4 @@
-package org.pixelpit.backend.auth;
+package org.pixelpit.backend.account;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

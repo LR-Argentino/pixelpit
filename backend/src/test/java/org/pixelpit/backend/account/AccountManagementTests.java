@@ -1,4 +1,4 @@
-package org.pixelpit.backend.auth;
+package org.pixelpit.backend.account;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -8,6 +8,14 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.pixelpit.backend.account.exceptions.EmailAlreadyTakenException;
+import org.pixelpit.backend.account.exceptions.PasswordMismatchException;
+import org.pixelpit.backend.account.internal.Account;
+import org.pixelpit.backend.account.internal.AccountRepository;
+import org.pixelpit.backend.account.internal.Role;
+import org.pixelpit.backend.profile.internal.Profile;
+import org.pixelpit.backend.profile.internal.ProfileRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -21,15 +29,18 @@ import static org.mockito.BDDMockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
-public class RegistrationServiceTests {
+public class AccountManagementTests {
 
     @Mock AccountRepository accountRepository;
     @Mock ProfileRepository profileRepository;
     @Mock PasswordEncoder passwordEncoder;
-    @InjectMocks RegistrationService registrationService;
+    @Mock
+    ApplicationEventPublisher applicationEventPublisher;
+
+    @InjectMocks
+    AccountManagement accountManagement;
 
     @Captor ArgumentCaptor<Account> accountArgumentCaptor;
-    @Captor ArgumentCaptor<Profile> profileArgumentCaptor;
 
     @Test
     void register_createAccount_whenEmailIsValid() {
@@ -39,10 +50,12 @@ public class RegistrationServiceTests {
                 "Sicher_123",
                 "Sicher_123"
                 );
+       givenSaveAssignsId(13);
 
-        registrationService.register(request);
+        accountManagement.register(request);
 
         then(accountRepository).should().save(accountArgumentCaptor.capture());
+        then(applicationEventPublisher).should().publishEvent(any(AccountRegistered.class));
         assertThat(accountArgumentCaptor.getValue().getEmail()).isEqualTo("test@mock.com");
     }
 
@@ -56,9 +69,10 @@ public class RegistrationServiceTests {
         );
         given(accountRepository.existsByEmail(any(String.class))).willReturn(true);
 
-        thenThrownBy(() -> registrationService.register(request)).isInstanceOf(EmailAlreadyTakenException.class);
+        thenThrownBy(() -> accountManagement.register(request)).isInstanceOf(EmailAlreadyTakenException.class);
 
         then(accountRepository).should(never()).save(any(Account.class));
+        then(applicationEventPublisher).should(never()).publishEvent(any(AccountRegistered.class));
     }
 
     @Test
@@ -67,18 +81,8 @@ public class RegistrationServiceTests {
         given(accountRepository.save(any(Account.class))).willThrow(new DataIntegrityViolationException("duplicate",
                 new ConstraintViolationException("duplicate", new SQLException(), "accounts_email_key")));
 
-        thenThrownBy(() -> registrationService.register(request))
+        thenThrownBy(() -> accountManagement.register(request))
                 .isInstanceOf(EmailAlreadyTakenException.class);
-    }
-
-    @Test
-    void register_throwUsernameAlreadyTakenException_whenUsernameConstraintViolated() {
-        RegisterAccountRequest request = new RegisterAccountRequest("blackbird", "test@mock.com", "Sicher_123", "Sicher_123");
-        given(profileRepository.save(any(Profile.class))).willThrow(new DataIntegrityViolationException("duplicate",
-                new ConstraintViolationException("duplicate", new SQLException(), "profiles_username_key")));
-
-        thenThrownBy(() -> registrationService.register(request))
-                .isInstanceOf(UsernameAlreadyTakenException.class);
     }
 
     @Test
@@ -90,9 +94,11 @@ public class RegistrationServiceTests {
                 "Sicher_123"
         );
         given(passwordEncoder.encode(anyString())).willReturn("hashed");
+        givenSaveAssignsId(42);
 
-        registrationService.register(request);
+        accountManagement.register(request);
 
+        then(applicationEventPublisher).should().publishEvent(any(AccountRegistered.class));
         then(accountRepository).should().save(accountArgumentCaptor.capture());
         assertThat(accountArgumentCaptor.getValue().getPasswordHash()).isEqualTo("hashed");
     }
@@ -106,8 +112,9 @@ public class RegistrationServiceTests {
                 "Sicher_12"
         );
 
-        thenThrownBy(() -> registrationService.register(request)).isInstanceOf(PasswordMismatchException.class);
+        thenThrownBy(() -> accountManagement.register(request)).isInstanceOf(PasswordMismatchException.class);
 
+        then(applicationEventPublisher).should(never()).publishEvent(any(AccountRegistered.class));
         then(accountRepository).should(never()).existsByEmail(anyString());
         then(profileRepository).should(never()).existsByUsername(anyString());
         then(accountRepository).should(never()).save(any(Account.class));
@@ -125,9 +132,11 @@ public class RegistrationServiceTests {
         );
         given(passwordEncoder.encode(anyString())).willReturn("hashed");
         given(accountRepository.existsByEmail(any(String.class))).willReturn(false);
+        givenSaveAssignsId(42);
 
-        registrationService.register(request);
+        accountManagement.register(request);
 
+        then(applicationEventPublisher).should().publishEvent(any(AccountRegistered.class));
         then(accountRepository).should().save(accountArgumentCaptor.capture());
         assertThat(accountArgumentCaptor.getValue().getPasswordHash()).isEqualTo("hashed");
         assertThat(accountArgumentCaptor.getValue().getEmail()).isEqualTo("test@mock.com");
@@ -142,47 +151,19 @@ public class RegistrationServiceTests {
                 "Sicher_123"
         );
 
-        registrationService.register(request);
+        givenSaveAssignsId(42);
+        accountManagement.register(request);
 
         then(accountRepository).should().save(accountArgumentCaptor.capture());
+        then(applicationEventPublisher).should().publishEvent(any(AccountRegistered.class));
         assertThat(accountArgumentCaptor.getValue().getRole()).isEqualTo(Role.USER);
     }
 
-    @Test
-    void register_createProfile_whenAccountAndProfileIsValid() {
-        RegisterAccountRequest request = new RegisterAccountRequest(
-                "blackbird",
-                "test@mock.com",
-                "Sicher_123",
-                "Sicher_123"
-        );
-        Account persistedAccount = new Account(request.email(), "hashed", Role.USER);
-        ReflectionTestUtils.setField(persistedAccount, "id", 42);
-
-        given(passwordEncoder.encode(anyString())).willReturn("hashed");
-        given(accountRepository.existsByEmail(any(String.class))).willReturn(false);
-        given(accountRepository.save(any(Account.class))).willReturn(persistedAccount);
-
-        registrationService.register(request);
-
-        then(profileRepository).should().save(profileArgumentCaptor.capture());
-        Profile profile = profileArgumentCaptor.getValue();
-        assertThat(profile.getUsername()).isEqualTo("blackbird");
-        assertThat(profile.getAccount().getId()).isEqualTo(42);
-    }
-
-    @Test
-    void register_throwUsernameAlreadyTakenException_whenUsernameIsAlreadyExists() {
-        RegisterAccountRequest request = new RegisterAccountRequest(
-                "blackbird",
-                "test@mock.com",
-                "Sicher_123",
-                "Sicher_123"
-        );
-        given(profileRepository.existsByUsername(any(String.class))).willReturn(true);
-
-        thenThrownBy(() -> registrationService.register(request)).isInstanceOf(UsernameAlreadyTakenException.class);
-        then(accountRepository).should(never()).save(any(Account.class));
-        then(profileRepository).should(never()).save(any(Profile.class));
+    private void givenSaveAssignsId(int id) {
+        given(accountRepository.save(any(Account.class))).willAnswer(invocation -> {
+            Account account = invocation.getArgument(0);
+            ReflectionTestUtils.setField(account, "id", id); // simuliert die DB-generierte ID
+            return account;
+        });
     }
 }

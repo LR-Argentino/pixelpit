@@ -1,4 +1,4 @@
-package org.pixelpit.backend.auth;
+package org.pixelpit.backend.account.exceptions;
 
 public class EmailAlreadyTakenException extends RuntimeException {
     public EmailAlreadyTakenException(String email) {

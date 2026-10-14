@@ -9,6 +9,9 @@ spring:
       ddl-auto: validate
     open-in-view: false
     show-sql: true
+  modulith:
+    events:
+      completion-mode: archive
 
 app:
   cors:

@@ -1,4 +1,4 @@
-package org.pixelpit.backend.auth;
+package org.pixelpit.backend.profile.internal;
 
 import org.springframework.data.repository.Repository;
 

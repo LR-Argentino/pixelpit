@@ -1,4 +1,4 @@
-package org.pixelpit.backend.auth;
+package org.pixelpit.backend.account.exceptions;
 
 public class PasswordMismatchException extends RuntimeException {
     public PasswordMismatchException() {

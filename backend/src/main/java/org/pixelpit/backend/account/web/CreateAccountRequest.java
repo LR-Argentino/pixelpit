@@ -1,4 +1,4 @@
-package org.pixelpit.backend.account;
+package org.pixelpit.backend.account.web;
 
 import jakarta.validation.constraints.*;
 

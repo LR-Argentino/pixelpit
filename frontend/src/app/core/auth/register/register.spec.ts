@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Register } from './register';
 
 describe('Register', () => {
@@ -8,6 +10,7 @@ describe('Register', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Register],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Register);
@@ -37,9 +40,9 @@ describe('Register', () => {
       expect(usernameErrorKinds('ab')).toEqual(['minLength']);
     });
 
-    it('accepts exactly 15 characters and rejects 16', () => {
-      expect(usernameErrorKinds('a'.repeat(15))).toEqual([]);
-      expect(usernameErrorKinds('a'.repeat(16))).toEqual(['maxLength']);
+    it('accepts exactly 20 characters and rejects 21', () => {
+      expect(usernameErrorKinds('a'.repeat(20))).toEqual([]);
+      expect(usernameErrorKinds('a'.repeat(21))).toEqual(['maxLength']);
     });
 
     it('rejects usernames containing spaces', () => {
@@ -109,31 +112,31 @@ describe('Register', () => {
   });
 
   describe('password repeat validation', () => {
-    const passwordReplyErrorKinds = (password: string, passwordReply: string) => {
+    const confirmPasswordErrorKinds = (password: string, confirmPassword: string) => {
       const registerForm = component['registerForm'];
       registerForm.password().value.set(password);
-      registerForm.passwordReply().value.set(passwordReply);
-      const kinds = registerForm.passwordReply().errors().map((error) => error.kind);
-      console.log(`password "${password}", repeat "${passwordReply}" -> errors: [${kinds.join(', ')}]`);
+      registerForm.confirmPassword().value.set(confirmPassword);
+      const kinds = registerForm.confirmPassword().errors().map((error) => error.kind);
+      console.log(`password "${password}", repeat "${confirmPassword}" -> errors: [${kinds.join(', ')}]`);
       return kinds;
     };
 
     it('accepts a repeat equal to the password', () => {
-      expect(passwordReplyErrorKinds('Geheim1!', 'Geheim1!')).toEqual([]);
+      expect(confirmPasswordErrorKinds('Geheim1!', 'Geheim1!')).toEqual([]);
     });
 
     it('reports only required for an empty repeat', () => {
-      expect(passwordReplyErrorKinds('Geheim1!', '')).toEqual(['required']);
+      expect(confirmPasswordErrorKinds('Geheim1!', '')).toEqual(['required']);
     });
 
     it('rejects a repeat that differs from the password', () => {
-      expect(passwordReplyErrorKinds('Geheim1!', 'Geheim1?')).toEqual(['fieldMismatch']);
+      expect(confirmPasswordErrorKinds('Geheim1!', 'Geheim1?')).toEqual(['fieldMismatch']);
     });
 
     it('re-validates the repeat when only the password changes', () => {
-      expect(passwordReplyErrorKinds('Geheim1!', 'Geheim1!')).toEqual([]);
+      expect(confirmPasswordErrorKinds('Geheim1!', 'Geheim1!')).toEqual([]);
       component['registerForm'].password().value.set('Anders2?');
-      const kinds = component['registerForm'].passwordReply().errors().map((error) => error.kind);
+      const kinds = component['registerForm'].confirmPassword().errors().map((error) => error.kind);
       console.log(`after password change -> repeat errors: [${kinds.join(', ')}]`);
       expect(kinds).toEqual(['fieldMismatch']);
     });
@@ -165,6 +168,71 @@ describe('Register', () => {
 
       emailField().markAsTouched();
       expect(await renderedEmailErrors()).toEqual(['Bitte eine E-Mail-Adresse eingeben.']);
+    });
+  });
+
+  describe('submit', () => {
+    const validUser = { username: 'vera42', email: 'vera42@studio.dev', password: 'Geheim1!', confirmPassword: 'Geheim1!' };
+
+    const submitForm = () => {
+      component['registerUser'].set(validUser);
+      component['onSubmit'](new Event('submit'));
+      const request = TestBed.inject(HttpTestingController).expectOne('/api/accounts');
+      expect(request.request.method).toBe('POST');
+      expect(request.request.body).toEqual(validUser);
+      return request;
+    };
+
+    afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+    it('posts the form value and marks the user as registered', async () => {
+      submitForm().flush(null, { status: 201, statusText: 'Created' });
+      await fixture.whenStable();
+
+      expect(component['registered']()).toBe(true);
+    });
+
+    it('shows a taken username on the username field', async () => {
+      submitForm().flush(
+        { title: 'Benutzername ist schon vergeben!' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await fixture.whenStable();
+
+      expect(component['registerForm'].username().errors().map((error) => error.message)).toEqual([
+        'Benutzername ist bereits vergeben',
+      ]);
+      expect(component['registered']()).toBe(false);
+    });
+
+    it('shows a taken email on the email field', async () => {
+      submitForm().flush({ title: 'Email existiert bereits!' }, { status: 409, statusText: 'Conflict' });
+      await fixture.whenStable();
+
+      expect(component['registerForm'].email().errors().map((error) => error.message)).toEqual([
+        'E-Mail wird bereits verwendet',
+      ]);
+    });
+
+    it('maps backend validation errors to their fields', async () => {
+      submitForm().flush(
+        { detail: 'Validierung fehlgeschlagen', errors: { username: ['Größe muss zwischen 3 und 20 sein'] } },
+        { status: 400, statusText: 'Bad Request' },
+      );
+      await fixture.whenStable();
+
+      expect(component['registerForm'].username().errors().map((error) => error.message)).toEqual([
+        'Größe muss zwischen 3 und 20 sein',
+      ]);
+    });
+
+    it('shows a general error for unexpected failures', async () => {
+      submitForm().flush(null, { status: 500, statusText: 'Server Error' });
+      await fixture.whenStable();
+
+      expect(component['registerForm']().errors().map((error) => error.message)).toEqual([
+        'Registrierung fehlgeschlagen. Bitte versuche es später erneut.',
+      ]);
     });
   });
 });

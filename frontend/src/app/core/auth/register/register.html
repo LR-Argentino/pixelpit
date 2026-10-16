@@ -7,15 +7,16 @@
       id="signup-username"
       [formField]="registerForm.username"
       type="text"
+      data-testid="signup-username-input"
       autocomplete="username"
       placeholder="z. B. voxelvera"
       aria-describedby="signup-username-hint"
       class="h-10 w-full rounded-[4px] border border-transparent bg-[#1a1a1a] px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-[#6f726f] focus:border-[#3a3a3a]"
     />
-    <div id="signup-username-hint" class="mt-2 text-[13px] leading-[1.4] text-[#6f726f]">3 bis 15 Zeichen, einmalig im Forum</div>
+    <div id="signup-username-hint" class="mt-2 text-[13px] leading-[1.4] text-[#6f726f]">3 bis 20 Zeichen, einmalig im Forum</div>
     @if (registerForm.username().invalid() && registerForm.username().touched()) {
       @for (error of registerForm.username().errors(); track error.kind) {
-        <div class="mt-1 text-[13px] leading-[1.4] text-red-500">{{ error.message }}</div>
+        <div class="mt-1 text-[13px] leading-[1.4] text-red-500" data-testid="signup-username-error-message">{{ error.message }}</div>
       }
     }
   </div>
@@ -28,6 +29,7 @@
       id="signup-email"
       [formField]="registerForm.email"
       type="email"
+      data-testid="signup-email-input"
       autocomplete="email"
       placeholder="du@studio.dev"
       aria-describedby="signup-email-hint"
@@ -36,7 +38,7 @@
     <div id="signup-email-hint" class="mt-2 text-[13px] leading-[1.4] text-[#6f726f]">Für den Bestätigungslink, nie öffentlich sichtbar</div>
     @if (registerForm.email().invalid() && registerForm.email().touched()) {
       @for (error of registerForm.email().errors(); track error.kind) {
-        <div class="mt-1 text-[13px] leading-[1.4] text-red-500">{{ error.message }}</div>
+        <div class="mt-1 text-[13px] leading-[1.4] text-red-500" data-testid="signup-email-error-message">{{ error.message }}</div>
       }
     }
   </div>
@@ -50,6 +52,7 @@
       [formField]="registerForm.password"
       type="password"
       autocomplete="new-password"
+      data-testid="signup-password-input"
       placeholder="Mindestens 8 Zeichen"
       aria-describedby="signup-password-hint"
       class="h-10 w-full rounded-[4px] border border-transparent bg-[#1a1a1a] px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-[#6f726f] focus:border-[#3a3a3a]"
@@ -59,7 +62,7 @@
     </div>
     @if (registerForm.password().invalid() && registerForm.password().touched()) {
       @for (error of registerForm.password().errors(); track error.kind) {
-        <div class="mt-1 text-[13px] leading-[1.4] text-red-500">{{ error.message }}</div>
+        <div class="mt-1 text-[13px] leading-[1.4] text-red-500" data-testid="signup-password-error-message">{{ error.message }}</div>
       }
     }
   </div>
@@ -70,26 +73,36 @@
     </label>
     <input
       id="signup-password-repeat"
-      [formField]="registerForm.passwordReply"
+      [formField]="registerForm.confirmPassword"
       type="password"
+      data-testid="signup-password-confirm-input"
       autocomplete="new-password"
       placeholder="Noch einmal dasselbe"
       class="h-10 w-full rounded-[4px] border border-transparent bg-[#1a1a1a] px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-[#6f726f] focus:border-[#3a3a3a]"
     />
-    @if (registerForm.passwordReply().invalid() && registerForm.passwordReply().touched()) {
-      @for (error of registerForm.passwordReply().errors(); track error.kind) {
-        <div class="mt-1 text-[13px] leading-[1.4] text-red-500">{{ error.message }}</div>
+    @if (registerForm.confirmPassword().invalid() && registerForm.confirmPassword().touched()) {
+      @for (error of registerForm.confirmPassword().errors(); track error.kind) {
+        <div class="mt-1 text-[13px] leading-[1.4] text-red-500" data-testid="signup-password-confirm-error-message">{{ error.message }}</div>
       }
     }
   </div>
 
   <button
     type="submit"
+    data-testid="signup-submit-button"
     class="inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-[2px] bg-white px-6 text-xs leading-none font-bold tracking-[.07em] text-black uppercase transition-colors duration-[120ms] hover:bg-[#d4d5d4] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white disabled:active:translate-y-0"
-    [disabled]="registerForm().invalid()"
+    [disabled]="registerForm().invalid() || registerForm().submitting()"
   >
-    Konto erstellen
+    {{ registerForm().submitting() ? 'Wird erstellt …' : 'Konto erstellen' }}
   </button>
+  @for (error of registerForm().errors(); track error.kind) {
+    <div role="alert" class="text-[13px] leading-[1.4] text-red-500" data-testid="signup-error-message">{{ error.message }}</div>
+  }
+  @if (registered()) {
+    <div role="status" class="text-[13px] leading-[1.4] text-[#d9c527]" data-testid="signup-success-message">
+      Konto erstellt!
+    </div>
+  }
   <div class="text-[13px] leading-[1.45] text-pretty text-[#6f726f]">
     Mit dem Erstellen akzeptierst du die Forenregeln. Benutzername und E-Mail müssen im Forum einmalig sein.
   </div>
@@ -102,6 +115,7 @@
 
   <button
     type="button"
+    data-testid="signup-signin-button"
     class="inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-[2px] border border-[#b5892f] px-6 text-xs leading-none font-bold tracking-[.07em] text-[#d9c527] uppercase shadow-[inset_0_0_0_1px_rgba(217,197,39,.18)] transition-colors duration-[120ms] hover:border-[#d9c527] hover:bg-[rgba(217,197,39,.08)] active:translate-y-px"
   >
     Anmelden

@@ -7,10 +7,8 @@ import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 
-public record RegisterAccountResponse(
+public record CreateAccountResponse(
         @NotBlank @Size(min = 3, max = 20) String username,
-        @Email @NotBlank String email,
-        @PastOrPresent Instant createdAt,
-        @PastOrPresent Instant updatedAt
+        @Email @NotBlank String email
 ) {
 }

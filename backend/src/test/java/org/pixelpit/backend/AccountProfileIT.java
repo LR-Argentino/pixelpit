@@ -4,7 +4,7 @@ package org.pixelpit.backend;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.pixelpit.backend.account.AccountManagement;
-import org.pixelpit.backend.account.RegisterAccountRequest;
+import org.pixelpit.backend.account.web.CreateAccountRequest;
 import org.pixelpit.backend.account.exceptions.EmailAlreadyTakenException;
 import org.pixelpit.backend.account.exceptions.PasswordMismatchException;
 import org.pixelpit.backend.profile.exceptions.UsernameAlreadyTakenException;
@@ -73,7 +73,7 @@ public class AccountProfileIT {
 
     @Test
     void register_createsNothing_whenPasswordsMismatch() {
-        RegisterAccountRequest request = new RegisterAccountRequest("blackbird", "test@mock.com",
+        CreateAccountRequest request = new CreateAccountRequest("blackbird", "test@mock.com",
                 PASSWORD, "Anders_1234");
 
         assertThatThrownBy(() -> accountManagement.register(request))
@@ -83,8 +83,8 @@ public class AccountProfileIT {
         assertThat(count("SELECT count(*) FROM profiles")).isZero();
     }
 
-    private RegisterAccountRequest request(String username, String email) {
-        return new RegisterAccountRequest(username, email, PASSWORD, PASSWORD);
+    private CreateAccountRequest request(String username, String email) {
+        return new CreateAccountRequest(username, email, PASSWORD, PASSWORD);
     }
 
     private long count(String sql) {

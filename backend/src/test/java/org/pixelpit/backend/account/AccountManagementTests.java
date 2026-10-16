@@ -13,6 +13,7 @@ import org.pixelpit.backend.account.exceptions.PasswordMismatchException;
 import org.pixelpit.backend.account.internal.Account;
 import org.pixelpit.backend.account.internal.AccountRepository;
 import org.pixelpit.backend.account.internal.Role;
+import org.pixelpit.backend.account.web.CreateAccountRequest;
 import org.pixelpit.backend.profile.internal.Profile;
 import org.pixelpit.backend.profile.internal.ProfileRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -44,7 +45,7 @@ public class AccountManagementTests {
 
     @Test
     void register_createAccount_whenEmailIsValid() {
-        RegisterAccountRequest request = new RegisterAccountRequest(
+        CreateAccountRequest request = new CreateAccountRequest(
                 "blackbird",
                 "test@mock.com",
                 "Sicher_123",
@@ -61,7 +62,7 @@ public class AccountManagementTests {
 
     @Test
     void register_throwEmailAlreadyTakenException_whenEmailIsAlreadyExists() {
-        RegisterAccountRequest request = new RegisterAccountRequest(
+        CreateAccountRequest request = new CreateAccountRequest(
                 "blackbird",
                 "test@mock.com",
                 "Sicher_123",
@@ -77,7 +78,7 @@ public class AccountManagementTests {
 
     @Test
     void register_throwEmailAlreadyTakenException_whenEmailConstraintViolated() {
-        RegisterAccountRequest request = new RegisterAccountRequest("blackbird", "test@mock.com", "Sicher_123", "Sicher_123");
+        CreateAccountRequest request = new CreateAccountRequest("blackbird", "test@mock.com", "Sicher_123", "Sicher_123");
         given(accountRepository.save(any(Account.class))).willThrow(new DataIntegrityViolationException("duplicate",
                 new ConstraintViolationException("duplicate", new SQLException(), "accounts_email_key")));
 
@@ -87,7 +88,7 @@ public class AccountManagementTests {
 
     @Test
     void register_createAccount_whenPasswordIsValid() {
-        RegisterAccountRequest request = new RegisterAccountRequest(
+        CreateAccountRequest request = new CreateAccountRequest(
                 "blackbird",
                 "test@mock.com",
                 "Sicher_123",
@@ -105,7 +106,7 @@ public class AccountManagementTests {
 
     @Test
     void register_throwPasswordMismatchException_whenPasswordNotMatched() {
-        RegisterAccountRequest request = new RegisterAccountRequest(
+        CreateAccountRequest request = new CreateAccountRequest(
                 "blackbird",
                 "test@mock.com",
                 "Sicher_123",
@@ -124,7 +125,7 @@ public class AccountManagementTests {
 
     @Test
     void register_createAccount_whenAccountIsValid() {
-        RegisterAccountRequest request = new RegisterAccountRequest(
+        CreateAccountRequest request = new CreateAccountRequest(
                 "blackbird",
                 "test@mock.com",
                 "Sicher_123",
@@ -144,7 +145,7 @@ public class AccountManagementTests {
 
     @Test
     void register_assignUserRole_whenAccountIsCreated() {
-        RegisterAccountRequest request = new RegisterAccountRequest(
+        CreateAccountRequest request = new CreateAccountRequest(
                 "blackbird",
                 "test@mock.com",
                 "Sicher_123",

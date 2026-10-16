@@ -2,6 +2,7 @@ package org.pixelpit.backend.account;
 
 import org.junit.jupiter.api.Test;
 import org.pixelpit.backend.TestcontainersConfiguration;
+import org.pixelpit.backend.account.web.CreateAccountRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -32,7 +33,7 @@ public class AccountManagementIT {
 
     @Test
     public void register_publishesAccountRegistered_whenSuccessfulRegistration(Scenario scenario) {
-        RegisterAccountRequest request = new RegisterAccountRequest("blackbird",
+        CreateAccountRequest request = new CreateAccountRequest("blackbird",
                 "test@mock.com",
                 "Sicher_1234",
                 "Sicher_1234");

@@ -20,9 +20,9 @@ class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
             http
                 .cors(Customizer.withDefaults())
-                    .csrf((csrf) -> csrf.ignoringRequestMatchers("/auth/login", "/auth/register"))
+                    .csrf((csrf) -> csrf.ignoringRequestMatchers("/auth/login", "/api/accounts"))
                     .authorizeHttpRequests((authorize) -> authorize
-                            .requestMatchers("/auth/login", "/auth/register","/error").permitAll()
+                            .requestMatchers("/api/auth/login", "/api/accounts","/error").permitAll()
                             .anyRequest().authenticated()
                     );
             return http.build();

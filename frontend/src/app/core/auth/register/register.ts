@@ -1,10 +1,26 @@
-import {Component, signal} from '@angular/core';
+import {Component, inject, signal} from '@angular/core';
+import {HttpErrorResponse} from '@angular/common/http';
+import {firstValueFrom} from 'rxjs';
 import {RegisterUser} from '../model/register-user';
-import {email, form, FormField, maxLength, minLength, pattern, required, SchemaPath, validate, submit} from '@angular/forms/signals';
+import {AuthService} from '../auth-service';
+import {
+  email,
+  FieldTree,
+  form,
+  FormField,
+  maxLength,
+  minLength,
+  pattern,
+  required,
+  SchemaPath,
+  submit,
+  validate,
+  ValidationError
+} from '@angular/forms/signals';
 
 function validUsername(path: SchemaPath<string>) {
   minLength(path, 3, { message: 'Mindestens 3 Zeichen' });
-  maxLength(path, 15, { message: 'Höchstens 15 Zeichen' });
+  maxLength(path, 20, { message: 'Höchstens 20 Zeichen' });
   pattern(path, /^[A-Za-z0-9]+$/, { message: 'Nur Buchstaben und Ziffern, keine Leer- oder Sonderzeichen' });
 }
 
@@ -26,6 +42,30 @@ function matchesField(path: SchemaPath<string>, otherPath: SchemaPath<string>, o
       : { kind: 'fieldMismatch', message: options?.message ?? 'Werte stimmen nicht überein' });
 }
 
+// Übersetzt die ProblemDetail-Antworten des Backends in Formularfehler
+function toServerErrors(error: unknown, registerForm: FieldTree<RegisterUser>): ValidationError.WithOptionalFieldTree[] {
+  if (error instanceof HttpErrorResponse) {
+    const problem = error.error;
+
+    if (error.status === 409 && problem?.title === 'Benutzername ist schon vergeben!') {
+      return [{ kind: 'server', fieldTree: registerForm.username, message: 'Benutzername ist bereits vergeben' }];
+    }
+    if (error.status === 409 && problem?.title === 'Email existiert bereits!') {
+      return [{ kind: 'server', fieldTree: registerForm.email, message: 'E-Mail wird bereits verwendet' }];
+    }
+    if (error.status === 400 && problem?.errors) {
+      const fieldErrors = problem.errors as Partial<Record<keyof RegisterUser, string[]>>;
+      const fields: (keyof RegisterUser)[] = ['username', 'email', 'password', 'confirmPassword'];
+      return fields.flatMap((field) =>
+        (fieldErrors[field] ?? []).map((message) => ({ kind: 'server', fieldTree: registerForm[field], message })));
+    }
+    if (error.status === 400 && problem?.title === 'Passwörter stimmen nicht überein!') {
+      return [{ kind: 'server', fieldTree: registerForm.confirmPassword, message: 'Passwörter stimmen nicht überein' }];
+    }
+  }
+  return [{ kind: 'server', message: 'Registrierung fehlgeschlagen. Bitte versuche es später erneut.' }];
+}
+
 @Component({
   imports: [FormField],
   selector: 'app-register',
@@ -33,11 +73,15 @@ function matchesField(path: SchemaPath<string>, otherPath: SchemaPath<string>, o
   templateUrl: './register.html',
 })
 export class Register {
+  private readonly authService = inject(AuthService);
+
+  protected registered = signal(false);
+
   protected registerUser = signal<RegisterUser>({
     username: '',
     email: '',
     password: '',
-    passwordReply: ''
+    confirmPassword: ''
   });
 
   protected registerForm = form(this.registerUser, (schemaPath): void => {
@@ -48,14 +92,20 @@ export class Register {
     required(schemaPath.password, { message: 'Passwort erforderlich' });
     minLength(schemaPath.password, 8, { message: 'Mindestens 8 Zeichen' });
     strongPassword(schemaPath.password);
-    required(schemaPath.passwordReply, { message: 'Bitte Passwort wiederholen' });
-    matchesField(schemaPath.passwordReply, schemaPath.password, { message: 'Passwörter stimmen nicht überein' });
+    required(schemaPath.confirmPassword, { message: 'Bitte Passwort wiederholen' });
+    matchesField(schemaPath.confirmPassword, schemaPath.password, { message: 'Passwörter stimmen nicht überein' });
   });
 
   protected onSubmit(event: Event): void {
     event.preventDefault();
     submit(this.registerForm, async () => {
-      console.log(`Is Form valid: ${this.registerUser()}`)
+      try {
+        await firstValueFrom(this.authService.register(this.registerUser()));
+        this.registered.set(true);
+        return undefined;
+      } catch (error) {
+        return toServerErrors(error, this.registerForm);
+      }
     });
   }
 }

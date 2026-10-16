@@ -43,13 +43,13 @@ class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public PasswordEncoder passwordEncoder(PasswordEncoderProperties props) {
         return new Argon2PasswordEncoder(
-                16,      // saltLength  – 16 Bytes (128 Bit)
-                32,      // hashLength  – 32 Bytes (256 Bit)
-                1,       // parallelism – p = 1
-                19456,   // memory      – in KiB → 19 MiB
-                2        // iterations  – t = 2
+                props.saltLength(),
+                props.hashLength(),
+                props.parallelism(),
+                props.memory(),
+                props.iterations()
         );
     }
 }

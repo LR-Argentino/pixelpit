@@ -29,6 +29,7 @@
     <properties>
         <java.version>25</java.version>
         <spring-modulith.version>2.1.1</spring-modulith.version>
+        <argLine></argLine>
     </properties>
     <dependencies>
         <dependency>

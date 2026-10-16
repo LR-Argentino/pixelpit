@@ -192,6 +192,20 @@ describe('Register', () => {
       expect(component['registered']()).toBe(true);
     });
 
+    it('clears all fields and shows no errors after a successful registration', async () => {
+      submitForm().flush(null, { status: 201, statusText: 'Created' });
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const registerForm = component['registerForm'];
+      expect(component['registerUser']()).toEqual({ username: '', email: '', password: '', confirmPassword: '' });
+      expect(registerForm().touched()).toBe(false);
+
+      const inputs = (fixture.nativeElement as HTMLElement).querySelectorAll('input');
+      expect(Array.from(inputs, (input) => input.value)).toEqual(['', '', '', '']);
+      expect((fixture.nativeElement as HTMLElement).querySelectorAll('.text-red-500').length).toBe(0);
+    });
+
     it('shows a taken username on the username field', async () => {
       submitForm().flush(
         { title: 'Benutzername ist schon vergeben!' },

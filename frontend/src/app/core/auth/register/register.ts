@@ -42,6 +42,10 @@ function matchesField(path: SchemaPath<string>, otherPath: SchemaPath<string>, o
       : { kind: 'fieldMismatch', message: options?.message ?? 'Werte stimmen nicht überein' });
 }
 
+function emptyRegisterUser(): RegisterUser {
+  return { username: '', email: '', password: '', confirmPassword: '' };
+}
+
 // Übersetzt die ProblemDetail-Antworten des Backends in Formularfehler
 function toServerErrors(error: unknown, registerForm: FieldTree<RegisterUser>): ValidationError.WithOptionalFieldTree[] {
   if (error instanceof HttpErrorResponse) {
@@ -77,12 +81,7 @@ export class Register {
 
   protected registered = signal(false);
 
-  protected registerUser = signal<RegisterUser>({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
+  protected registerUser = signal<RegisterUser>(emptyRegisterUser());
 
   protected registerForm = form(this.registerUser, (schemaPath): void => {
     required(schemaPath.email, { message: 'E-Mail erforderlich' });
@@ -102,6 +101,7 @@ export class Register {
       try {
         await firstValueFrom(this.authService.register(this.registerUser()));
         this.registered.set(true);
+        this.registerForm().reset(emptyRegisterUser()); // leert die Felder und setzt touched/dirty zurück
         return undefined;
       } catch (error) {
         return toServerErrors(error, this.registerForm);

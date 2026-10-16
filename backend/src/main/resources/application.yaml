@@ -26,10 +26,8 @@ app:
     allowed-headers:
       - Authorization
       - Content-Type
-    allow-credentials:
-      - true
-    max-age:
-      - 3600
+    allow-credentials: true
+    max-age: 3600
 
 server:
   port: 8081

@@ -16,19 +16,5 @@ services:
       start_period: 30s
       timeout: 10s
 
-  keycloack:
-    image: quay.io/keycloak/keycloak:26.7.4
-    environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_USER}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_PW}
-    command:
-      - start-dev
-      - --import-realm
-    volumes:
-      - ./src/main/resources/keycloak-realm:/opt/keycloak/data/import:ro
-    ports:
-      - '8080:8080'
-
-
 volumes:
   pgdata:

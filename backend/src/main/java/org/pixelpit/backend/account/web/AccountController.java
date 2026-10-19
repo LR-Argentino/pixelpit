@@ -15,7 +15,7 @@ public class AccountController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void createAccount(@Valid @RequestBody CreateAccountRequest request) {
-        accountManagement.register(request);
+    public void createAccount(@Valid @RequestBody CreateAccountRequest accountRequest) {
+        accountManagement.create(accountRequest);
     }
 }

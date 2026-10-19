@@ -38,7 +38,7 @@ public class AccountManagementIT {
                 "Sicher_1234",
                 "Sicher_1234");
 
-        scenario.stimulate(() -> accountManagement.register(request))
+        scenario.stimulate(() -> accountManagement.create(request))
                 .andWaitForEventOfType(AccountRegistered.class)
                 .matching((accountRegistered -> accountRegistered.username().equals("blackbird")))
                 .toArriveAndVerify((event) -> {

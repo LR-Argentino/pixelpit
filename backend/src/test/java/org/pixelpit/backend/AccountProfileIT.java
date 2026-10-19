@@ -36,7 +36,7 @@ public class AccountProfileIT {
 
     @Test
     void createAccountAndProfile_accountProfileCreated_whenValid() {
-        accountManagement.register(request("blackbird_1996", "Test@Mock.com"));
+        accountManagement.create(request("blackbird_1996", "Test@Mock.com"));
 
         Map<String, Object> account = jdbcTemplate.queryForMap("SELECT id, email, password_hash, role FROM accounts");
         assertThat(account.get("email")).isEqualTo("test@mock.com");
@@ -50,9 +50,9 @@ public class AccountProfileIT {
 
     @Test
     void register_rollsBackAccount_whenUsernameTaken() {
-        accountManagement.register(request("blackbird", "a@mock.com"));
+        accountManagement.create(request("blackbird", "a@mock.com"));
 
-        assertThatThrownBy(() -> accountManagement.register(request("blackbird", "b@mock.com")))
+        assertThatThrownBy(() -> accountManagement.create(request("blackbird", "b@mock.com")))
                 .isInstanceOf(UsernameAlreadyTakenException.class);
 
         assertThat(count("SELECT count(*) FROM accounts WHERE email = 'b@mock.com'")).isZero();
@@ -62,9 +62,9 @@ public class AccountProfileIT {
 
     @Test
     void register_throwsEmailAlreadyTaken_whenEmailExistsCaseInsensitive() {
-        accountManagement.register(request("user1", "test@mock.com"));
+        accountManagement.create(request("user1", "test@mock.com"));
 
-        assertThatThrownBy(() -> accountManagement.register(request("user2", "TEST@mock.com")))
+        assertThatThrownBy(() -> accountManagement.create(request("user2", "TEST@mock.com")))
                 .isInstanceOf(EmailAlreadyTakenException.class);
 
         assertThat(count("SELECT count(*) FROM profiles WHERE username = 'user2'")).isZero();
@@ -76,7 +76,7 @@ public class AccountProfileIT {
         CreateAccountRequest request = new CreateAccountRequest("blackbird", "test@mock.com",
                 PASSWORD, "Anders_1234");
 
-        assertThatThrownBy(() -> accountManagement.register(request))
+        assertThatThrownBy(() -> accountManagement.create(request))
                 .isInstanceOf(PasswordMismatchException.class);
 
         assertThat(count("SELECT count(*) FROM accounts")).isZero();

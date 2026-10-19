@@ -1,4 +1,4 @@
-package org.pixelpit.backend.account.internal;
+package org.pixelpit.backend.account;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

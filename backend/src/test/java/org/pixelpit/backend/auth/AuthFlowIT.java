@@ -37,11 +37,12 @@ class AuthFlowIT {
 
     @BeforeEach
     void setUp() {
+        truncate();
         accountManagement.create(new CreateAccountRequest("blackbird", "test@mock.com", PASSWORD, PASSWORD));
     }
 
     @AfterEach
-    void tearDown() {
+    void truncate() {
         jdbcTemplate.update("TRUNCATE profiles, accounts RESTART IDENTITY CASCADE");
     }
 
@@ -120,6 +121,14 @@ class AuthFlowIT {
     @Test
     void me_returnsUnauthorized_whenNotLoggedIn() {
         assertThat(me(new MockHttpSession())).hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void me_setsXsrfCookie_soSpaCanSendCsrfToken() {
+        MvcTestResult result = me(new MockHttpSession());
+
+        assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
+        assertThat(result).cookies().containsCookie("XSRF-TOKEN");
     }
 
     @Test

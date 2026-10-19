@@ -1,4 +1,4 @@
-import {Component, inject, signal} from '@angular/core';
+import {Component, inject, output, signal} from '@angular/core';
 import {HttpErrorResponse} from '@angular/common/http';
 import {firstValueFrom} from 'rxjs';
 import {RegisterUser} from '../model/register-user';
@@ -78,6 +78,8 @@ function toServerErrors(error: unknown, registerForm: FieldTree<RegisterUser>): 
 })
 export class Register {
   private readonly authService = inject(AuthService);
+
+  readonly goLogin = output<void>();
 
   protected registered = signal(false);
 

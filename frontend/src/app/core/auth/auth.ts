@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, input, linkedSignal } from '@angular/core';
 import { Register } from './register/register';
 import { Login } from './login/login';
 import { AuthService } from './auth-service';
@@ -12,7 +12,11 @@ import { AuthService } from './auth-service';
 export class Auth {
   protected readonly authService = inject(AuthService);
 
-  protected readonly mode = signal<'register' | 'login'>('register');
+  /** Startansicht, kommt aus den Routen-Daten (/anmelden bzw. /registrieren) */
+  readonly initialMode = input<'register' | 'login'>('register');
+
+  // Startet mit dem Modus der Route, lässt sich danach per Klick umschalten
+  protected readonly mode = linkedSignal(() => this.initialMode());
 
   protected async logout(): Promise<void> {
     await this.authService.logout();

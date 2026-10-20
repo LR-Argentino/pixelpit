@@ -1,6 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
 
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap');
 @import 'tailwindcss';
 
 html {
@@ -9,7 +9,27 @@ html {
 
 @theme {
   --font-archivo: Archivo, Helvetica, sans-serif;
+  --font-marker: Caveat, cursive;
   --animate-float: float 4s ease-in-out infinite;
+
+  /* Graustufen des PixelPit-Designs, von fast Schwarz bis hellgrau */
+  --color-ink-900: #050505;
+  --color-ink-850: #0a0a0a;
+  --color-ink-800: #0e0e0e;
+  --color-ink-750: #121212;
+  --color-ink-700: #171717;
+  --color-ink-650: #1a1a1a;
+  --color-ink-600: #1e1e1e;
+  --color-ink-550: #242424;
+  --color-ink-500: #2a2a2a;
+  --color-ink-400: #3a3a3a;
+  /* gedämpfter Text, ≥ 4.5:1 auf Karten (WCAG AA) */
+  --color-ink-200: #8a8d8a;
+  --color-ink-100: #a1a3a1;
+  --color-ink-050: #d4d5d4;
+  --color-success: #34c24c;
+  --color-danger: #e0483c;
+  --color-hero: #0d1a0f;
 
   @keyframes float {
     0%,
@@ -19,5 +39,23 @@ html {
     50% {
       transform: translateY(-12px);
     }
+  }
+}
+
+/* Einheitlicher Fokusrahmen für alle interaktiven Elemente */
+@utility focus-ring {
+  outline: none;
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
   }
 }

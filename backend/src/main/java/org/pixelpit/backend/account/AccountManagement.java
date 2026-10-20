@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.pixelpit.backend.account.exceptions.EmailAlreadyTakenException;
 import org.pixelpit.backend.account.exceptions.PasswordMismatchException;
-import org.pixelpit.backend.account.internal.Account;
 import org.pixelpit.backend.account.internal.AccountRepository;
-import org.pixelpit.backend.account.internal.Role;
 import org.pixelpit.backend.account.web.CreateAccountRequest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,7 +21,7 @@ public class AccountManagement {
 
 
     @Transactional
-    public void register(CreateAccountRequest request) throws EmailAlreadyTakenException, PasswordMismatchException {
+    public void create(CreateAccountRequest request) throws EmailAlreadyTakenException, PasswordMismatchException {
         if (!request.password().equals(request.confirmPassword())) {
             throw new PasswordMismatchException();
         }

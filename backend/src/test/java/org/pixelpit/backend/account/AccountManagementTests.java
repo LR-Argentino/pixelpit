@@ -10,9 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.pixelpit.backend.account.exceptions.EmailAlreadyTakenException;
 import org.pixelpit.backend.account.exceptions.PasswordMismatchException;
-import org.pixelpit.backend.account.internal.Account;
 import org.pixelpit.backend.account.internal.AccountRepository;
-import org.pixelpit.backend.account.internal.Role;
 import org.pixelpit.backend.account.web.CreateAccountRequest;
 import org.pixelpit.backend.profile.internal.Profile;
 import org.pixelpit.backend.profile.internal.ProfileRepository;
@@ -53,7 +51,7 @@ public class AccountManagementTests {
                 );
        givenSaveAssignsId(13);
 
-        accountManagement.register(request);
+        accountManagement.create(request);
 
         then(accountRepository).should().save(accountArgumentCaptor.capture());
         then(applicationEventPublisher).should().publishEvent(any(AccountRegistered.class));
@@ -70,7 +68,7 @@ public class AccountManagementTests {
         );
         given(accountRepository.existsByEmail(any(String.class))).willReturn(true);
 
-        thenThrownBy(() -> accountManagement.register(request)).isInstanceOf(EmailAlreadyTakenException.class);
+        thenThrownBy(() -> accountManagement.create(request)).isInstanceOf(EmailAlreadyTakenException.class);
 
         then(accountRepository).should(never()).save(any(Account.class));
         then(applicationEventPublisher).should(never()).publishEvent(any(AccountRegistered.class));
@@ -82,7 +80,7 @@ public class AccountManagementTests {
         given(accountRepository.save(any(Account.class))).willThrow(new DataIntegrityViolationException("duplicate",
                 new ConstraintViolationException("duplicate", new SQLException(), "accounts_email_key")));
 
-        thenThrownBy(() -> accountManagement.register(request))
+        thenThrownBy(() -> accountManagement.create(request))
                 .isInstanceOf(EmailAlreadyTakenException.class);
     }
 
@@ -97,7 +95,7 @@ public class AccountManagementTests {
         given(passwordEncoder.encode(anyString())).willReturn("hashed");
         givenSaveAssignsId(42);
 
-        accountManagement.register(request);
+        accountManagement.create(request);
 
         then(applicationEventPublisher).should().publishEvent(any(AccountRegistered.class));
         then(accountRepository).should().save(accountArgumentCaptor.capture());
@@ -113,7 +111,7 @@ public class AccountManagementTests {
                 "Sicher_12"
         );
 
-        thenThrownBy(() -> accountManagement.register(request)).isInstanceOf(PasswordMismatchException.class);
+        thenThrownBy(() -> accountManagement.create(request)).isInstanceOf(PasswordMismatchException.class);
 
         then(applicationEventPublisher).should(never()).publishEvent(any(AccountRegistered.class));
         then(accountRepository).should(never()).existsByEmail(anyString());
@@ -135,7 +133,7 @@ public class AccountManagementTests {
         given(accountRepository.existsByEmail(any(String.class))).willReturn(false);
         givenSaveAssignsId(42);
 
-        accountManagement.register(request);
+        accountManagement.create(request);
 
         then(applicationEventPublisher).should().publishEvent(any(AccountRegistered.class));
         then(accountRepository).should().save(accountArgumentCaptor.capture());
@@ -153,7 +151,7 @@ public class AccountManagementTests {
         );
 
         givenSaveAssignsId(42);
-        accountManagement.register(request);
+        accountManagement.create(request);
 
         then(accountRepository).should().save(accountArgumentCaptor.capture());
         then(applicationEventPublisher).should().publishEvent(any(AccountRegistered.class));

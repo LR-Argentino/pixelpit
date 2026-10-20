@@ -1,0 +1,83 @@
+<form class="flex flex-col gap-[22px] font-archivo" novalidate (submit)="onSubmit($event)">
+  <div>
+    <h2 class="m-0 text-[30px] leading-[1.15] font-bold tracking-[-.02em] text-white">Anmelden</h2>
+    <p class="mt-2 text-[15px] leading-normal text-pretty text-[#a1a3a1]">
+      Melde dich mit deinem Benutzernamen oder deiner E-Mail-Adresse an.
+    </p>
+  </div>
+
+  <div>
+    <label for="login-identifier" class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase">
+      Benutzername oder E-Mail
+    </label>
+    <input
+      id="login-identifier"
+      [formField]="loginForm.identifier"
+      type="text"
+      data-testid="login-identifier-input"
+      autocomplete="username"
+      placeholder="voxelvera oder du@studio.dev"
+      class="h-10 w-full rounded-[4px] border border-transparent bg-[#1a1a1a] px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-[#6f726f] focus:border-[#3a3a3a]"
+    />
+    @if (submitted() && loginForm.identifier().invalid()) {
+      @for (error of loginForm.identifier().errors(); track error.kind) {
+        <div class="mt-2 text-[13px] leading-[1.4] text-[#e0483c]" data-testid="login-identifier-error-message">{{ error.message }}</div>
+      }
+    }
+  </div>
+
+  <div>
+    <label for="login-password" class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase">
+      Passwort
+    </label>
+    <input
+      id="login-password"
+      [formField]="loginForm.password"
+      type="password"
+      data-testid="login-password-input"
+      autocomplete="current-password"
+      placeholder="Dein Passwort"
+      class="h-10 w-full rounded-[4px] border border-transparent bg-[#1a1a1a] px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-[#6f726f] focus:border-[#3a3a3a]"
+    />
+    @if (submitted() && loginForm.password().invalid()) {
+      @for (error of loginForm.password().errors(); track error.kind) {
+        <div class="mt-2 text-[13px] leading-[1.4] text-[#e0483c]" data-testid="login-password-error-message">{{ error.message }}</div>
+      }
+    }
+  </div>
+
+  @for (error of loginForm().errors(); track error.kind) {
+    <div role="alert" class="flex items-start gap-2.5 rounded-[3px] border border-[#242424] px-3.5 py-3" data-testid="login-error-message">
+      <svg class="mt-px size-4 shrink-0 text-[#e0483c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+        <path d="M12 9v4" />
+        <path d="M12 17h.01" />
+      </svg>
+      <div class="text-[13px] leading-[1.45] text-[#a1a3a1]">{{ error.message }}</div>
+    </div>
+  }
+
+  <button
+    type="submit"
+    data-testid="login-submit-button"
+    class="inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-[2px] bg-white px-6 text-xs leading-none font-bold tracking-[.07em] text-black uppercase transition-colors duration-[120ms] hover:bg-[#d4d5d4] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white disabled:active:translate-y-0"
+    [disabled]="loginForm().submitting()"
+  >
+    {{ loginForm().submitting() ? 'Wird angemeldet …' : 'Anmelden' }}
+  </button>
+
+  <div class="flex items-center gap-3.5">
+    <div class="h-px flex-1 bg-[#171717]"></div>
+    <span class="text-[11px] leading-none font-bold tracking-[.08em] text-[#6f726f] uppercase">oder</span>
+    <div class="h-px flex-1 bg-[#171717]"></div>
+  </div>
+
+  <button
+    type="button"
+    data-testid="login-register-button"
+    (click)="goRegister.emit()"
+    class="inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-[2px] border border-[#b5892f] px-6 text-xs leading-none font-bold tracking-[.07em] text-[#d9c527] uppercase shadow-[inset_0_0_0_1px_rgba(217,197,39,.18)] transition-colors duration-[120ms] hover:border-[#d9c527] hover:bg-[rgba(217,197,39,.08)] active:translate-y-px"
+  >
+    Konto erstellen
+  </button>
+</form>

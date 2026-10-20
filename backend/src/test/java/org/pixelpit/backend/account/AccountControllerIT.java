@@ -42,14 +42,14 @@ public class AccountControllerIT {
         assertThat(result).hasStatus(HttpStatus.CREATED);
         assertThat(result).body().isEmpty();
 
-        verify(accountManagement).register(
+        verify(accountManagement).create(
                 new CreateAccountRequest("blackbird", "tester@mock.com", "Sicher_1234", "Sicher_1234"));
     }
 
     @Test
     public void createAccount_throwConflict_whenEmailAlreadyExists() {
         doThrow(new EmailAlreadyTakenException("tester@mock.com"))
-                .when(accountManagement).register(any(CreateAccountRequest.class));
+                .when(accountManagement).create(any(CreateAccountRequest.class));
 
         assertThat(postAccount(createAccountJson("blackbird", "tester@mock.com", "Sicher_1234", "Sicher_1234")))
                 .hasStatus(HttpStatus.CONFLICT)
@@ -61,7 +61,7 @@ public class AccountControllerIT {
     @Test
     public void createAccount_throwConflict_whenUsernameAlreadyExists() {
         doThrow(new UsernameAlreadyTakenException("blackbird"))
-                .when(accountManagement).register(any(CreateAccountRequest.class));
+                .when(accountManagement).create(any(CreateAccountRequest.class));
 
         MvcTestResult result = postAccount(createAccountJson("blackbird", "tester@mock.com", "Sicher_1234", "Sicher_1234"));
 
@@ -73,7 +73,7 @@ public class AccountControllerIT {
     @Test
     public void createAccount_throwBadRequest_whenPasswordsDoNotMatch() {
         doThrow(new PasswordMismatchException())
-                .when(accountManagement).register(any(CreateAccountRequest.class));
+                .when(accountManagement).create(any(CreateAccountRequest.class));
 
         MvcTestResult result = postAccount(createAccountJson("blackbird", "tester@mock.com", "Sicher_1234", "Anders_1234"));
 
@@ -92,7 +92,7 @@ public class AccountControllerIT {
         assertThat(result).bodyJson().extractingPath("$.errors.email").asArray().isNotEmpty();
         assertThat(result).bodyJson().doesNotHavePath("$.errors.password");
 
-        verify(accountManagement, never()).register(any());
+        verify(accountManagement, never()).create(any());
     }
 
     @ParameterizedTest(name = "{0} = \"{1}\"")
@@ -110,7 +110,7 @@ public class AccountControllerIT {
         assertThat(result).bodyJson().extractingPath("$.errors").asMap().containsOnlyKeys(field);
         assertThat(result).bodyJson().extractingPath("$.errors." + field).asArray().isNotEmpty();
 
-        verify(accountManagement, never()).register(any());
+        verify(accountManagement, never()).create(any());
     }
 
     static Stream<Arguments> invalidFields() {
@@ -118,6 +118,7 @@ public class AccountControllerIT {
                 Arguments.of("username", "ab"),
                 Arguments.of("username", "a".repeat(21)),
                 Arguments.of("username", "   "),
+                Arguments.of("username", "max@mock.com"),
                 Arguments.of("email", "keine-email"),
                 Arguments.of("email", ""),
                 Arguments.of("password", "kurz"),
@@ -143,7 +144,7 @@ public class AccountControllerIT {
         assertThat(result).bodyJson().extractingPath("$.errors").asMap()
                 .containsOnlyKeys("username", "email", "password", "confirmPassword");
 
-        verify(accountManagement, never()).register(any());
+        verify(accountManagement, never()).create(any());
     }
 
     private MvcTestResult postAccount(String body) {

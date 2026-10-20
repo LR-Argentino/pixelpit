@@ -1,0 +1,13 @@
+@if (authService.isAuthenticated()) {
+  <app-icon name="square-pen" class="text-ink-200" />
+  <span class="min-w-[180px] flex-[1_1_200px] text-[15px] leading-[1.4] text-ink-100" data-testid="new-thread-prompt-hint">
+    Frage stellen oder Projekt zeigen
+  </span>
+  <a appButton size="sm" routerLink="/threads/neu" data-testid="new-thread-prompt-create-link">Neuen Thread erstellen</a>
+} @else {
+  <app-icon name="lock" class="text-ink-200" />
+  <span class="min-w-[180px] flex-[1_1_200px] text-[15px] leading-[1.4] text-ink-100" data-testid="new-thread-prompt-hint">
+    Neuen Thread erstellen — nur für angemeldete Mitglieder
+  </span>
+  <a appButton variant="secondary" size="sm" routerLink="/anmelden" data-testid="new-thread-prompt-login-link">Anmelden</a>
+}

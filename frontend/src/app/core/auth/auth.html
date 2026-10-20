@@ -8,11 +8,18 @@
     </div>
 
     <div>
-      <h1 class="m-0 text-4xl leading-[1.04] font-bold tracking-[-.025em] text-pretty text-white lg:text-[44px]">
-        Konto erstellen
+      <h1
+        class="m-0 text-4xl leading-[1.04] font-bold tracking-[-.025em] text-pretty text-white lg:text-[44px]"
+        data-testid="auth-title-heading"
+      >
+        {{ mode() === 'login' ? 'Willkommen zurück' : 'Konto erstellen' }}
       </h1>
-      <p class="mt-3 max-w-prose text-[15px] leading-normal text-pretty text-[#a1a3a1]">
-        Lesen kannst du auch als Gast. Mit einem Konto kommen Threads, Kommentare und Anhänge dazu.
+      <p class="mt-3 max-w-prose text-[15px] leading-normal text-pretty text-[#a1a3a1]" data-testid="auth-intro-text">
+        @if (mode() === 'login') {
+          Schön, dass du wieder da bist. Nach der Anmeldung kannst du Threads erstellen, kommentieren und Anhänge hochladen.
+        } @else {
+          Lesen kannst du auch als Gast. Mit einem Konto kommen Threads, Kommentare und Anhänge dazu.
+        }
       </p>
     </div>
 
@@ -56,15 +63,27 @@
     </div>
 
     <div class="text-[13px] leading-[1.45] text-[#6f726f]">
-      Schon dabei?
-      <button
-        type="button"
-        data-testid="aside-signin-link"
-        (click)="mode.set('login')"
-        class="cursor-pointer border-0 bg-transparent p-0 font-bold text-white hover:text-[#a1a3a1]"
-      >
-        Anmelden
-      </button>
+      @if (mode() === 'login') {
+        Neu hier?
+        <button
+          type="button"
+          data-testid="auth-register-button"
+          (click)="mode.set('register')"
+          class="cursor-pointer border-0 bg-transparent p-0 font-bold text-white hover:text-[#a1a3a1]"
+        >
+          Konto erstellen
+        </button>
+      } @else {
+        Schon dabei?
+        <button
+          type="button"
+          data-testid="aside-signin-link"
+          (click)="mode.set('login')"
+          class="cursor-pointer border-0 bg-transparent p-0 font-bold text-white hover:text-[#a1a3a1]"
+        >
+          Anmelden
+        </button>
+      }
     </div>
   </section>
 

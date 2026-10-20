@@ -1,6 +1,19 @@
 <div class="flex min-h-dvh bg-ink-850 font-archivo">
   <app-sidebar />
   <main class="min-w-0 flex-1 overflow-hidden">
-    <!-- Hero, Kategorien, Threads und Beitragsvorschau folgen in den nächsten Schritten -->
+    <app-hero />
+    <div class="px-11">
+      <app-category-grid [categories]="categories()" [activeSlug]="kategorie()" />
+      <div class="flex flex-wrap gap-12 pt-12 pb-16">
+        <app-thread-list
+          class="flex-[3_1_360px]"
+          [threads]="threads()"
+          [categories]="categories()"
+          [activeSlug]="kategorie()"
+          [sort]="sort()"
+        />
+        <!-- Beitragsvorschau folgt im nächsten Schritt -->
+      </div>
+    </div>
   </main>
 </div>

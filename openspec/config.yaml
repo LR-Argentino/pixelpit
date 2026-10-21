@@ -1,0 +1,44 @@
+schema: spec-driven
+
+context: |
+  Language: German
+  All artifacts must be written in German.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+  Projekt: Pixelpit, ein Web-Forum (Konten, Profile, Threads, Posts, Kategorien, Anhänge).
+  Ein Git-Repo mit zwei getrennten Modulen:
+
+  frontend/ – Angular 22 (Standalone-Komponenten), Tailwind CSS 4, TypeScript 6
+    - Unit-Tests: Vitest (`npm test`), E2E: Playwright (`npm run e2e`)
+    - Dev-Server auf http://localhost:4200, `/api` wird per proxy.conf.json an das Backend weitergeleitet
+    - Für E2E-Tests und Templates gelten die Regeln in frontend/CLAUDE.md
+      (data-testid-Konvention, Page Objects, Szenarien, nichts mocken)
+
+  backend/ – Spring Boot 4.1 mit Java 25, Spring Modulith, Maven Wrapper (`./mvnw`)
+    - Fachmodule als Pakete unter org.pixelpit.backend: account, auth, profile
+      (öffentliche API im Modulpaket, Interna in `internal`, REST in `web`)
+    - Module kommunizieren über Events (z. B. AccountRegistered), nicht über interne Klassen anderer Module
+    - PostgreSQL 18 via Docker Compose, Schema ausschließlich über Liquibase-Changesets
+      (db/changelog/changes, Hibernate nur `ddl-auto: validate`)
+    - Läuft auf Port 8081, REST-Endpunkte unter /api, Session-Login mit CSRF-Schutz für die SPA
+    - Tests: `./mvnw test` mit Testcontainers (Docker muss laufen)
+
+  Specs beschreiben Verhalten aus Nutzersicht, nicht Module. Eine Capability (z. B. Registrierung)
+  deckt Frontend und Backend gemeinsam ab; ein Change darf beide Module betreffen.
+
+rules:
+  proposal:
+    - Nenne ausdrücklich, welche Module betroffen sind (frontend, backend oder beide)
+  design:
+    - Beschreibe bei neuen Backend-Funktionen, zu welchem Modulith-Modul sie gehören und ob neue Events nötig sind
+    - Schemaänderungen immer als neues Liquibase-Changeset planen, nie bestehende Changesets ändern
+  tasks:
+    - Gruppiere Aufgaben nach Modul (Backend, Frontend, E2E-Tests)
+    - Neue oder geänderte REST-Endpunkte bekommen Integrationstests im Backend
+    - Neue oder geänderte Seiten bekommen data-testid-Attribute und Playwright-Tests nach frontend/CLAUDE.md
+
+operations:
+  apply:
+    guidance:
+      - Backend-Befehle im Ordner backend/ ausführen, Frontend-Befehle im Ordner frontend/
+      - Vor dem Abhaken einer Backend-Aufgabe `./mvnw test` laufen lassen, inklusive BackendApplicationModulithTests

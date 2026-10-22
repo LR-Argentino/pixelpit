@@ -1,0 +1,76 @@
+schema: spec-driven
+
+context: |
+  Language: German
+  All artifacts must be written in German.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+  Projekt: Pixelpit, ein Web-Forum (Konten, Profile, Threads, Posts, Kategorien, Anhänge).
+  Ein Git-Repo mit zwei getrennten Modulen:
+
+  frontend/ – Angular 22 (Standalone-Komponenten), Tailwind CSS 4, TypeScript 6
+    - Unit-Tests: Vitest (`npm test`), E2E: Playwright (`npm run e2e`)
+    - Dev-Server auf http://localhost:4200, `/api` wird per proxy.conf.json an das Backend weitergeleitet
+    - Für E2E-Tests und Templates gelten die Regeln in frontend/CLAUDE.md
+      (data-testid-Konvention, Page Objects, Szenarien, nichts mocken)
+
+  backend/ – Spring Boot 4.1 mit Java 25, Spring Modulith, Maven Wrapper (`./mvnw`)
+    - Fachmodule als Pakete unter org.pixelpit.backend: account, auth, profile
+      (öffentliche API im Modulpaket, Interna in `internal`, REST in `web`, Exceptions in `exceptions`)
+    - Module kommunizieren über Events (ApplicationEventPublisher + @EventListener, z. B. AccountRegistered)
+      oder über die öffentliche API eines Moduls (z. B. ProfileLookUp), nie über `internal`-Klassen
+    - REST unter /api, Request/Response als Java-Records mit Bean Validation, Lombok für Konstruktoren
+    - Fehler als ProblemDetail aus einem @RestControllerAdvice pro Modul, mit deutschem `title`
+    - Login per Session (Spring Security, Argon2-Passwörter, CSRF-Schutz für die SPA);
+      nur POST /api/auth/login und POST /api/accounts sind ohne Login erreichbar
+    - PostgreSQL 18 via Docker Compose, Schema ausschließlich über Liquibase-Changesets
+      (db/changelog/changes, Hibernate nur `ddl-auto: validate`)
+    - Tests mit `./mvnw test` (Testcontainers, Docker muss laufen):
+      `*Tests` = Unit-Tests, `*IT` = Integrationstests (@WebMvcTest oder mit Datenbank),
+      Testmethoden nach dem Muster `methode_returnsX_whenY`
+
+  Fachbegriffe:
+    - Account: Login-Daten (E-Mail, Passwort-Hash, Rolle USER/MODERATOR/ADMIN)
+    - Profil: öffentliche Daten eines Nutzers (Benutzername, Avatar), gehört zu genau einem Account
+    - Thread: Titel (5–200 Zeichen), Ersteller, Kategorien (n:m), optional ein Lösungs-Post
+    - Post: Beitrag in einem Thread (1–20.000 Zeichen), optional mit Anhängen
+    - Gast: nicht angemeldeter Besucher
+
+  Regeln, die überall gelten:
+    - Threads und Posts werden nie physisch gelöscht, sondern per Soft Delete markiert (deleted_at/deleted_by)
+    - Gelöschte Konten hinterlassen ein anonymisiertes Profil "deleted-<id>" ohne Account
+
+  Specs beschreiben Verhalten aus Nutzersicht, nicht Module. Eine Capability (z. B. Registrierung)
+  deckt Frontend und Backend gemeinsam ab; ein Change darf beide Module betreffen.
+
+rules:
+  proposal:
+    - Nenne ausdrücklich, welche Module betroffen sind (frontend, backend oder beide)
+    - Unklare Geschäftsregeln als offene Fragen auflisten, nie selbst festlegen
+    - Ein Abschnitt "Nicht im Umfang" ist Pflicht
+  specs:
+    - Geschäftsregeln in Fachsprache formulieren, ohne Klassen- oder Tabellennamen
+    - Szenarien, die die API betreffen, nennen den erwarteten HTTP-Status (z. B. "THEN antwortet das System mit 404")
+    - Pro Requirement mindestens ein Positivszenario und ein Fehler- oder Berechtigungsszenario
+    - Berechtigungen ausdrücklich je Rolle beschreiben (Gast, USER, MODERATOR, ADMIN)
+  design:
+    - Beschreibe bei neuen Backend-Funktionen, zu welchem Modulith-Modul sie gehören und ob neue Events nötig sind
+    - REST-Endpunkte mit Methode, Pfad, Parametern, Request/Response-Records und ProblemDetail je Fehlerfall
+    - Schemaänderungen immer als neues Liquibase-Changeset planen, nie bestehende Changesets ändern
+    - Bei Listen und Detailansichten auf N+1-Abfragen achten und die Lösung nennen
+  tasks:
+    - Gruppiere Aufgaben nach Modul (Backend, Frontend, E2E-Tests)
+    - Test zuerst - pro Spec-Szenario eine Test-Aufgabe vor der Umsetzungsaufgabe, die das Szenario beim Namen nennt
+    - Neue oder geänderte REST-Endpunkte bekommen Integrationstests (*IT) im Backend
+    - Neue oder geänderte Seiten bekommen data-testid-Attribute und Playwright-Tests nach frontend/CLAUDE.md
+
+operations:
+  apply:
+    guidance:
+      - Aufgaben mit dem Vermerk "(selbst)" nicht umsetzen, sondern nur Hinweise geben, wo und wie anzufangen ist
+      - Backend-Befehle im Ordner backend/ ausführen, Frontend-Befehle im Ordner frontend/
+      - Bei Test-zuerst-Aufgaben prüfen, dass der neue Test vor der Umsetzung fehlschlägt
+      - Vor dem Abhaken einer Backend-Aufgabe `./mvnw test` laufen lassen, inklusive BackendApplicationModulithTests
+  archive:
+    guidance:
+      - Prüfen, ob backend/README.md oder frontend/CLAUDE.md angepasst werden müssen, und das nennen

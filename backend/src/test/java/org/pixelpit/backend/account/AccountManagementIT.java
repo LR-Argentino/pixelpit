@@ -1,5 +1,7 @@
 package org.pixelpit.backend.account;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pixelpit.backend.TestcontainersConfiguration;
 import org.pixelpit.backend.account.web.CreateAccountRequest;
@@ -7,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.modulith.test.ApplicationModuleTest;
 import org.springframework.modulith.test.Scenario;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
@@ -20,6 +23,15 @@ public class AccountManagementIT {
 
     @Autowired
     AccountManagement accountManagement;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    @AfterEach
+    void truncate() {
+        jdbcTemplate.update("TRUNCATE profiles, accounts RESTART IDENTITY CASCADE");
+    }
 
     @TestConfiguration(proxyBeanMethods = false)
     static class PasswordEncoderConfiguration {

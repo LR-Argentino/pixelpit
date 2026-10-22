@@ -1,13 +1,13 @@
-import { computed, Service, Signal, signal } from '@angular/core';
+import { computed, Service, signal } from '@angular/core';
+import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Category } from './model/category';
 import { ForumStats } from './model/forum-stats';
-import { Thread } from './model/thread';
-import { queryThreads, ThreadQuery } from './model/thread-query';
-import { MOCK_CATEGORIES, MOCK_NEW_POSTS_THIS_WEEK, MOCK_THREADS } from './forum-mock-data';
+import { ThreadPage } from './model/thread-page';
+import { MOCK_CATEGORIES, MOCK_NEW_POSTS_THIS_WEEK } from './forum-mock-data';
 
 /**
- * Einzige Datenquelle für Forum-Inhalte. Liefert vorerst MOCK-Daten;
- * beim Anbinden des Backends wird nur diese Klasse umgestellt (z. B. auf httpResource).
+ * Einzige Datenquelle für Forum-Inhalte. Threads kommen vom Backend,
+ * Kategorien und Statistiken sind vorerst noch MOCK-Daten.
  */
 @Service()
 export class ForumService {
@@ -21,13 +21,15 @@ export class ForumService {
     newPostsThisWeek: this.newPostsThisWeek(),
   }));
 
-  private readonly threadList = signal<Thread[]>(MOCK_THREADS);
-
   /**
-   * Threads passend zur Abfrage; aktualisiert sich, sobald sich die Abfrage ändert.
-   * Mit Backend z. B.: httpResource(() => ({ url: '/api/threads', params: { ...query() } })).value
+   * Threads der angegebenen Seite (1-basiert); lädt neu, sobald sich die Seite ändert.
+   * Muss in einem Injection Context aufgerufen werden.
    */
-  public threads(query: () => ThreadQuery): Signal<Thread[]> {
-    return computed(() => queryThreads(this.threadList(), query()));
+  public threads(page: () => number): HttpResourceRef<ThreadPage | undefined> {
+    // Die API zählt Seiten ab 0, alles darüber ab 1
+    return httpResource<ThreadPage>(() => ({
+      url: '/api/threads',
+      params: { page: page() - 1 },
+    }));
   }
 }

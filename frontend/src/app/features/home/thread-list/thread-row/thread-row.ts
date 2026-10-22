@@ -1,15 +1,12 @@
 import { Component, input } from '@angular/core';
-import { DatePipe, I18nPluralPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Thread } from '../../../../core/forum/model/thread';
-import { TimeAgoPipe } from '../../../../shared/pipes/time-ago-pipe';
-import { AvatarStack } from '../../../../shared/ui/avatar-stack/avatar-stack';
 import { Badge } from '../../../../shared/ui/badge/badge';
-import { Icon } from '../../../../shared/ui/icon/icon';
 
 /** Eine Zeile der Thread-Liste. Die ganze Zeile ist klickbar, bleibt aber ein einziger Tab-Stopp. */
 @Component({
-  imports: [RouterLink, DatePipe, I18nPluralPipe, TimeAgoPipe, AvatarStack, Badge, Icon],
+  imports: [RouterLink, DatePipe, Badge],
   selector: 'li[appThreadRow]',
   styleUrl: './thread-row.css',
   templateUrl: './thread-row.html',
@@ -20,7 +17,4 @@ import { Icon } from '../../../../shared/ui/icon/icon';
 })
 export class ThreadRow {
   readonly thread = input.required<Thread>();
-
-  protected readonly replyPlural = { '=1': '1 Antwort', other: '# Antworten' };
-  protected readonly attachmentPlural = { '=1': '1 Anhang', other: '# Anhänge' };
 }

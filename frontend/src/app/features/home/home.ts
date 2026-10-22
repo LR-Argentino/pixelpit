@@ -1,6 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { ForumService } from '../../core/forum/forum-service';
-import { toThreadSort } from '../../core/forum/model/thread-query';
+import { toPageNumber } from '../../core/forum/model/thread-page';
 import { Sidebar } from '../../layout/sidebar/sidebar';
 import { CategoryGrid } from './category-grid/category-grid';
 import { Hero } from './hero/hero';
@@ -16,14 +16,12 @@ import { ThreadList } from './thread-list/thread-list';
 export class Home {
   private readonly forumService = inject(ForumService);
 
-  // Query-Parameter ?kategorie=<slug>&sortierung=<sort>, gebunden über withComponentInputBinding()
+  // Query-Parameter ?kategorie=<slug>&seite=<n>, gebunden über withComponentInputBinding()
+  /** Markiert nur die Kategorie im Grid, filtert die Thread-Liste (noch) nicht */
   readonly kategorie = input<string>();
-  readonly sortierung = input<string>();
+  readonly seite = input<string>();
 
-  protected readonly sort = computed(() => toThreadSort(this.sortierung()));
+  protected readonly page = computed(() => toPageNumber(this.seite()));
   protected readonly categories = this.forumService.categories;
-  protected readonly threads = this.forumService.threads(() => ({
-    categorySlug: this.kategorie(),
-    sort: this.sort(),
-  }));
+  protected readonly threads = this.forumService.threads(this.page);
 }

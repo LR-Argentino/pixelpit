@@ -19,9 +19,9 @@ describe('SectionHeading', () => {
     const heading = root.querySelector('[data-testid="section-heading-title-heading"]');
     expect(heading?.textContent?.trim()).toBe('Kategorien');
     expect(heading?.id).toBe('cat-heading');
-    expect(root.querySelector('[data-testid="section-heading-subtitle-text"]')?.textContent).toBe(
-      'Untertitel',
-    );
+    expect(
+      root.querySelector('[data-testid="section-heading-subtitle-text"]')?.textContent?.trim(),
+    ).toBe('Untertitel');
     expect(root.querySelector('button')?.textContent).toBe('Aktion');
   });
 

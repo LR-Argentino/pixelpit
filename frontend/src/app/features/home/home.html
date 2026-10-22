@@ -7,10 +7,11 @@
       <div class="flex flex-wrap gap-12 pt-12 pb-16">
         <app-thread-list
           class="flex-[3_1_360px]"
-          [threads]="threads()"
-          [categories]="categories()"
-          [activeSlug]="kategorie()"
-          [sort]="sort()"
+          [threadPage]="threads.hasValue() ? threads.value() : undefined"
+          [loading]="threads.isLoading()"
+          [failed]="threads.error() !== undefined"
+          [currentPage]="page()"
+          (retry)="threads.reload()"
         />
         <!-- Beitragsvorschau folgt im nächsten Schritt -->
       </div>

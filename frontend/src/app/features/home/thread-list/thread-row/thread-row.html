@@ -1,13 +1,8 @@
 @let t = thread();
 <div class="min-w-0">
   <div class="mb-2 flex flex-wrap items-center gap-2.5">
-    <app-badge data-testid="thread-row-category-text">{{ t.category.name }}</app-badge>
-    @if (t.replyCount === 0) {
-      <span
-        class="text-xs leading-none font-semibold text-white"
-        data-testid="thread-row-unanswered-text"
-        >Noch keine Antwort</span
-      >
+    @if (t.category; as category) {
+      <app-badge data-testid="thread-row-category-text">{{ category.name }}</app-badge>
     }
     <span class="text-[13px] leading-none text-ink-200" data-testid="thread-row-created-text">
       Erstellt am {{ t.createdAt | date: 'd. MMM y' }}
@@ -25,38 +20,12 @@
     </a>
   </h3>
 
-  <p
-    class="mt-2 mb-0 text-[15px] leading-normal text-pretty text-ink-100"
-    data-testid="thread-row-excerpt-text"
-  >
-    {{ t.excerpt }}
-  </p>
-
-  <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] leading-none">
-    <span class="inline-flex items-center gap-2 text-ink-100" data-testid="thread-row-replies-text">
-      <app-icon name="message-square" [size]="15" />
-      {{ t.replyCount | i18nPlural: replyPlural }}
-    </span>
-    @if (t.attachmentCount > 0) {
-      <span
-        class="inline-flex items-center gap-2 text-ink-100"
-        data-testid="thread-row-attachments-text"
-      >
-        <app-icon name="paperclip" [size]="15" />
-        {{ t.attachmentCount | i18nPlural: attachmentPlural }}
-      </span>
-    }
-    <span class="text-ink-200" data-testid="thread-row-activity-text"
-      >Letzte Aktivität {{ t.lastActivityAt | timeAgo }}</span
+  @if (t.excerpt; as excerpt) {
+    <p
+      class="mt-2 mb-0 text-[15px] leading-normal text-pretty text-ink-100"
+      data-testid="thread-row-excerpt-text"
     >
-  </div>
-</div>
-
-<div class="pt-[30px]">
-  <app-avatar-stack
-    [users]="t.participants"
-    [size]="26"
-    [max]="4"
-    data-testid="thread-row-participants-text"
-  />
+      {{ excerpt }}
+    </p>
+  }
 </div>

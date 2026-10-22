@@ -10,15 +10,11 @@ registerLocaleData(localeDe);
 
 function thread(overrides: Partial<Thread> = {}): Thread {
   return {
-    id: 'navmesh',
+    id: 42,
     title: 'Navmesh backt nicht',
-    category: { slug: 'engines', name: 'Engines' },
     createdAt: '2026-09-22T09:14:00',
+    category: { id: 3, name: 'Engines' },
     excerpt: 'Auszug',
-    replyCount: 23,
-    attachmentCount: 2,
-    lastActivityAt: new Date(Date.now() - 20 * 60_000).toISOString(),
-    participants: ['Lena', 'Tom'],
     ...overrides,
   };
 }
@@ -37,42 +33,52 @@ async function render(value: Thread) {
 const text = (root: HTMLElement, testId: string) =>
   root.querySelector(`[data-testid="${testId}"]`)?.textContent?.replace(/\s+/g, ' ').trim();
 
+const exists = (root: HTMLElement, testId: string) =>
+  root.querySelector(`[data-testid="${testId}"]`) !== null;
+
 describe('ThreadRow', () => {
-  it('sollte Kategorie, Titel, Datum und Aktivität anzeigen', async () => {
+  it('sollte Kategorie, Datum, Titel und Vorschau anzeigen', async () => {
     const root = await render(thread());
 
     expect(text(root, 'thread-row-category-text')).toBe('Engines');
-    expect(text(root, 'thread-row-title-link')).toBe('Navmesh backt nicht');
     expect(text(root, 'thread-row-created-text')).toBe('Erstellt am 22. Sept. 2026');
-    expect(text(root, 'thread-row-activity-text')).toBe('Letzte Aktivität vor 20 Min.');
+    expect(text(root, 'thread-row-title-link')).toBe('Navmesh backt nicht');
+    expect(text(root, 'thread-row-excerpt-text')).toBe('Auszug');
   });
 
   it('sollte den Titel auf die Thread-Seite verlinken', async () => {
     const root = await render(thread());
 
     expect(root.querySelector('[data-testid="thread-row-title-link"]')?.getAttribute('href')).toBe(
-      '/threads/navmesh',
+      '/threads/42',
     );
   });
 
-  it('sollte Mehrzahl verwenden, wenn es mehrere Antworten und Anhänge gibt', async () => {
+  it('sollte keine Vorschau zeigen, wenn der Thread keine hat', async () => {
+    const root = await render(thread({ excerpt: null }));
+
+    expect(exists(root, 'thread-row-excerpt-text')).toBe(false);
+    expect(text(root, 'thread-row-title-link')).toBe('Navmesh backt nicht');
+    expect(text(root, 'thread-row-created-text')).toBe('Erstellt am 22. Sept. 2026');
+  });
+
+  it('sollte kein Kategorie-Badge zeigen, wenn der Thread keine Kategorie hat', async () => {
+    const root = await render(thread({ category: null }));
+
+    expect(exists(root, 'thread-row-category-text')).toBe(false);
+  });
+
+  it('sollte keine Angaben zeigen, die das Backend nicht liefert', async () => {
     const root = await render(thread());
 
-    expect(text(root, 'thread-row-replies-text')).toBe('23 Antworten');
-    expect(text(root, 'thread-row-attachments-text')).toBe('2 Anhänge');
-  });
-
-  it('sollte Einzahl verwenden, wenn es genau eine Antwort und einen Anhang gibt', async () => {
-    const root = await render(thread({ replyCount: 1, attachmentCount: 1 }));
-
-    expect(text(root, 'thread-row-replies-text')).toBe('1 Antwort');
-    expect(text(root, 'thread-row-attachments-text')).toBe('1 Anhang');
-  });
-
-  it('sollte „Noch keine Antwort“ zeigen und Anhänge ausblenden, wenn beides fehlt', async () => {
-    const root = await render(thread({ replyCount: 0, attachmentCount: 0 }));
-
-    expect(text(root, 'thread-row-unanswered-text')).toBe('Noch keine Antwort');
-    expect(root.querySelector('[data-testid="thread-row-attachments-text"]')).toBeNull();
+    for (const testId of [
+      'thread-row-replies-text',
+      'thread-row-attachments-text',
+      'thread-row-activity-text',
+      'thread-row-participants-text',
+      'thread-row-unanswered-text',
+    ]) {
+      expect(exists(root, testId), testId).toBe(false);
+    }
   });
 });

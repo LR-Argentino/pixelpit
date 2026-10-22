@@ -1,16 +1,15 @@
-import { Category } from './category';
-
+/** Eintrag der Thread-Liste, wie ihn GET /api/threads liefert */
 export interface Thread {
-  id: string;
+  id: number;
   title: string;
-  category: Pick<Category, 'slug' | 'name'>;
   /** ISO-8601 */
   createdAt: string;
-  excerpt: string;
-  replyCount: number;
-  attachmentCount: number;
-  /** ISO-8601, Zeitpunkt des letzten Beitrags */
-  lastActivityAt: string;
-  /** Anzeigenamen der Beteiligten, Ersteller zuerst */
-  participants: string[];
+  category: ThreadCategory | null;
+  /** null, wenn der Eröffnungspost gelöscht ist */
+  excerpt: string | null;
+}
+
+export interface ThreadCategory {
+  id: number;
+  name: string;
 }

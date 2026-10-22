@@ -2,60 +2,117 @@
   <app-section-heading
     headingId="thread-list-heading"
     title="Aktuelle Threads"
-    [subtitle]="sortHint()"
-  >
-    <app-thread-sort-tabs [active]="sort()" />
-  </app-section-heading>
-
-  <app-thread-category-filter
-    class="mt-5 mb-6"
-    [categories]="categories()"
-    [activeSlug]="activeSlug()"
+    subtitle="Neueste zuerst"
   />
 
-  <app-new-thread-prompt class="mb-8" />
+  <app-new-thread-prompt class="mt-5 mb-8" />
 
-  <p class="sr-only" aria-live="polite" data-testid="thread-list-count-text">
-    {{ threads().length }} Threads angezeigt
-  </p>
-
-  @if (threads().length === 0) {
+  @let page = threadPage();
+  @if (failed()) {
     <div class="rounded-[3px] border border-ink-550 px-6 py-10 text-center">
-      <p class="m-0 text-base font-bold text-white" data-testid="thread-list-empty-heading">
-        {{
-          sort() === 'unbeantwortet'
-            ? 'Hier warten keine Fragen auf Antwort'
-            : 'Keine Threads in dieser Auswahl'
-        }}
-      </p>
       <p
-        class="mx-auto mt-2 mb-0 max-w-[360px] text-[13px] leading-normal text-ink-100"
-        data-testid="thread-list-empty-text"
+        class="m-0 text-base font-bold text-white"
+        role="alert"
+        data-testid="thread-list-error-text"
       >
-        @if (activeCategoryName(); as name) {
-          In „{{ name }}“ gibt es nichts, das zu diesem Filter passt.
-        } @else {
-          Aktuell gibt es nichts, das zu diesem Filter passt.
-        }
+        Threads konnten nicht geladen werden
       </p>
       <div class="mt-5 flex justify-center">
-        <a
+        <button
           appButton
           variant="secondary"
           size="sm"
-          routerLink="/"
-          fragment="threads"
-          data-testid="thread-list-reset-link"
+          type="button"
+          (click)="retry.emit()"
+          data-testid="thread-list-retry-button"
         >
-          Filter zurücksetzen
-        </a>
+          Erneut versuchen
+        </button>
       </div>
     </div>
+  } @else if (!page) {
+    <p
+      class="m-0 py-10 text-center text-[13px] text-ink-100"
+      role="status"
+      data-testid="thread-list-loading-text"
+    >
+      Threads werden geladen …
+    </p>
   } @else {
-    <ol class="m-0 flex list-none flex-col p-0">
-      @for (thread of threads(); track thread.id) {
-        <li appThreadRow [thread]="thread" data-testid="thread-list-thread-item"></li>
+    <p class="sr-only" aria-live="polite" data-testid="thread-list-count-text">
+      {{ page.content.length }} Threads angezeigt
+    </p>
+
+    @if (page.content.length === 0) {
+      <div class="rounded-[3px] border border-ink-550 px-6 py-10 text-center">
+        <p class="m-0 text-base font-bold text-white" data-testid="thread-list-empty-heading">
+          Keine Threads gefunden
+        </p>
+        <p
+          class="mx-auto mt-2 mb-0 max-w-[360px] text-[13px] leading-normal text-ink-100"
+          data-testid="thread-list-empty-text"
+        >
+          {{
+            currentPage() === 1
+              ? 'Hier wurde noch kein Thread erstellt.'
+              : 'Auf dieser Seite gibt es keine Threads.'
+          }}
+        </p>
+        @if (currentPage() > 1) {
+          <div class="mt-5 flex justify-center">
+            <a
+              appButton
+              variant="secondary"
+              size="sm"
+              routerLink="/"
+              fragment="threads"
+              data-testid="thread-list-reset-link"
+            >
+              Zur ersten Seite
+            </a>
+          </div>
+        }
+      </div>
+    } @else {
+      <ol class="m-0 flex list-none flex-col p-0">
+        @for (thread of page.content; track thread.id) {
+          <li appThreadRow [thread]="thread" data-testid="thread-list-thread-item"></li>
+        }
+      </ol>
+
+      @if (hasNewer() || hasOlder()) {
+        <nav aria-label="Seiten der Thread-Liste" class="mt-6 flex justify-between gap-4">
+          @if (hasNewer()) {
+            <a
+              appButton
+              variant="secondary"
+              size="sm"
+              routerLink="/"
+              [queryParams]="{ seite: newerPage() }"
+              queryParamsHandling="merge"
+              fragment="threads"
+              data-testid="thread-list-newer-link"
+            >
+              Neuere
+            </a>
+          }
+          @if (hasOlder()) {
+            <a
+              appButton
+              variant="secondary"
+              size="sm"
+              class="ml-auto"
+              routerLink="/"
+              [queryParams]="{ seite: olderPage() }"
+              queryParamsHandling="merge"
+              fragment="threads"
+              data-testid="thread-list-older-link"
+            >
+              Ältere
+            </a>
+          }
+        </nav>
       }
-    </ol>
+    }
   }
 </section>

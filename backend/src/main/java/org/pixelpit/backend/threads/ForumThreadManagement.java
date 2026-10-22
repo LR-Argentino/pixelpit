@@ -7,9 +7,4 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ForumThreadManagement {
     private final ForumThreadRepository forumThreadRepository;
-
-
-    public void createThread() {
-
-    }
 }

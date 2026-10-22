@@ -25,6 +25,7 @@ public class ProfileManagementIT {
 
     @BeforeAll
     void setUp() {
+        tearDown();
         accountId = jdbcTemplate.queryForObject(
                 "INSERT INTO accounts (email, password_hash) VALUES (?, ?) RETURNING id",
                 Integer.class,

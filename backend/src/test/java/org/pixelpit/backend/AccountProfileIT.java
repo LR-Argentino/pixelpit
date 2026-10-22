@@ -2,6 +2,7 @@ package org.pixelpit.backend;
 
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pixelpit.backend.account.AccountManagement;
 import org.pixelpit.backend.account.web.CreateAccountRequest;
@@ -29,8 +30,9 @@ public class AccountProfileIT {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @BeforeEach
     @AfterEach
-    void tearDown() {
+    void truncate() {
         jdbcTemplate.update("TRUNCATE profiles, accounts RESTART IDENTITY CASCADE");
     }
 

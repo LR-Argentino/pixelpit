@@ -1,0 +1,118 @@
+<section id="threads" aria-labelledby="thread-list-heading" class="scroll-mt-6">
+  <app-section-heading
+    headingId="thread-list-heading"
+    title="Aktuelle Threads"
+    subtitle="Neueste zuerst"
+  />
+
+  <app-new-thread-prompt class="mt-5 mb-8" />
+
+  @let page = threadPage();
+  @if (failed()) {
+    <div class="rounded-[3px] border border-ink-550 px-6 py-10 text-center">
+      <p
+        class="m-0 text-base font-bold text-white"
+        role="alert"
+        data-testid="thread-list-error-text"
+      >
+        Threads konnten nicht geladen werden
+      </p>
+      <div class="mt-5 flex justify-center">
+        <button
+          appButton
+          variant="secondary"
+          size="sm"
+          type="button"
+          (click)="retry.emit()"
+          data-testid="thread-list-retry-button"
+        >
+          Erneut versuchen
+        </button>
+      </div>
+    </div>
+  } @else if (!page) {
+    <p
+      class="m-0 py-10 text-center text-[13px] text-ink-100"
+      role="status"
+      data-testid="thread-list-loading-text"
+    >
+      Threads werden geladen …
+    </p>
+  } @else {
+    <p class="sr-only" aria-live="polite" data-testid="thread-list-count-text">
+      {{ page.content.length }} Threads angezeigt
+    </p>
+
+    @if (page.content.length === 0) {
+      <div class="rounded-[3px] border border-ink-550 px-6 py-10 text-center">
+        <p class="m-0 text-base font-bold text-white" data-testid="thread-list-empty-heading">
+          Keine Threads gefunden
+        </p>
+        <p
+          class="mx-auto mt-2 mb-0 max-w-[360px] text-[13px] leading-normal text-ink-100"
+          data-testid="thread-list-empty-text"
+        >
+          {{
+            currentPage() === 1
+              ? 'Hier wurde noch kein Thread erstellt.'
+              : 'Auf dieser Seite gibt es keine Threads.'
+          }}
+        </p>
+        @if (currentPage() > 1) {
+          <div class="mt-5 flex justify-center">
+            <a
+              appButton
+              variant="secondary"
+              size="sm"
+              routerLink="/"
+              fragment="threads"
+              data-testid="thread-list-reset-link"
+            >
+              Zur ersten Seite
+            </a>
+          </div>
+        }
+      </div>
+    } @else {
+      <ol class="m-0 flex list-none flex-col p-0">
+        @for (thread of page.content; track thread.id) {
+          <li appThreadRow [thread]="thread" data-testid="thread-list-thread-item"></li>
+        }
+      </ol>
+
+      @if (hasNewer() || hasOlder()) {
+        <nav aria-label="Seiten der Thread-Liste" class="mt-6 flex justify-between gap-4">
+          @if (hasNewer()) {
+            <a
+              appButton
+              variant="secondary"
+              size="sm"
+              routerLink="/"
+              [queryParams]="{ seite: newerPage() }"
+              queryParamsHandling="merge"
+              fragment="threads"
+              data-testid="thread-list-newer-link"
+            >
+              Neuere
+            </a>
+          }
+          @if (hasOlder()) {
+            <a
+              appButton
+              variant="secondary"
+              size="sm"
+              class="ml-auto"
+              routerLink="/"
+              [queryParams]="{ seite: olderPage() }"
+              queryParamsHandling="merge"
+              fragment="threads"
+              data-testid="thread-list-older-link"
+            >
+              Ältere
+            </a>
+          }
+        </nav>
+      }
+    }
+  }
+</section>

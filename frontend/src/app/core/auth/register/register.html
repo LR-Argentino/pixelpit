@@ -1,6 +1,9 @@
 <form class="flex flex-col gap-[22px] font-archivo" (submit)="onSubmit($event)">
   <div>
-    <label for="signup-username" class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase">
+    <label
+      for="signup-username"
+      class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase"
+    >
       Benutzername
     </label>
     <input
@@ -13,16 +16,26 @@
       aria-describedby="signup-username-hint"
       class="h-10 w-full rounded-[4px] border border-transparent bg-[#1a1a1a] px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-[#6f726f] focus:border-[#3a3a3a]"
     />
-    <div id="signup-username-hint" class="mt-2 text-[13px] leading-[1.4] text-[#6f726f]">3 bis 20 Zeichen, einmalig im Forum</div>
+    <div id="signup-username-hint" class="mt-2 text-[13px] leading-[1.4] text-[#6f726f]">
+      3 bis 20 Zeichen, einmalig im Forum
+    </div>
     @if (registerForm.username().invalid() && registerForm.username().touched()) {
       @for (error of registerForm.username().errors(); track error.kind) {
-        <div class="mt-1 text-[13px] leading-[1.4] text-red-500" data-testid="signup-username-error-message">{{ error.message }}</div>
+        <div
+          class="mt-1 text-[13px] leading-[1.4] text-red-500"
+          data-testid="signup-username-error-message"
+        >
+          {{ error.message }}
+        </div>
       }
     }
   </div>
 
   <div>
-    <label for="signup-email" class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase">
+    <label
+      for="signup-email"
+      class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase"
+    >
       E-Mail
     </label>
     <input
@@ -35,16 +48,26 @@
       aria-describedby="signup-email-hint"
       class="h-10 w-full rounded-[4px] border border-transparent bg-[#1a1a1a] px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-[#6f726f] focus:border-[#3a3a3a]"
     />
-    <div id="signup-email-hint" class="mt-2 text-[13px] leading-[1.4] text-[#6f726f]">Für den Bestätigungslink, nie öffentlich sichtbar</div>
+    <div id="signup-email-hint" class="mt-2 text-[13px] leading-[1.4] text-[#6f726f]">
+      Für den Bestätigungslink, nie öffentlich sichtbar
+    </div>
     @if (registerForm.email().invalid() && registerForm.email().touched()) {
       @for (error of registerForm.email().errors(); track error.kind) {
-        <div class="mt-1 text-[13px] leading-[1.4] text-red-500" data-testid="signup-email-error-message">{{ error.message }}</div>
+        <div
+          class="mt-1 text-[13px] leading-[1.4] text-red-500"
+          data-testid="signup-email-error-message"
+        >
+          {{ error.message }}
+        </div>
       }
     }
   </div>
 
   <div>
-    <label for="signup-password" class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase">
+    <label
+      for="signup-password"
+      class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase"
+    >
       Passwort
     </label>
     <input
@@ -62,13 +85,21 @@
     </div>
     @if (registerForm.password().invalid() && registerForm.password().touched()) {
       @for (error of registerForm.password().errors(); track error.kind) {
-        <div class="mt-1 text-[13px] leading-[1.4] text-red-500" data-testid="signup-password-error-message">{{ error.message }}</div>
+        <div
+          class="mt-1 text-[13px] leading-[1.4] text-red-500"
+          data-testid="signup-password-error-message"
+        >
+          {{ error.message }}
+        </div>
       }
     }
   </div>
 
   <div>
-    <label for="signup-password-repeat" class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase">
+    <label
+      for="signup-password-repeat"
+      class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase"
+    >
       Passwort wiederholen
     </label>
     <input
@@ -82,7 +113,12 @@
     />
     @if (registerForm.confirmPassword().invalid() && registerForm.confirmPassword().touched()) {
       @for (error of registerForm.confirmPassword().errors(); track error.kind) {
-        <div class="mt-1 text-[13px] leading-[1.4] text-red-500" data-testid="signup-password-confirm-error-message">{{ error.message }}</div>
+        <div
+          class="mt-1 text-[13px] leading-[1.4] text-red-500"
+          data-testid="signup-password-confirm-error-message"
+        >
+          {{ error.message }}
+        </div>
       }
     }
   </div>
@@ -96,20 +132,33 @@
     {{ registerForm().submitting() ? 'Wird erstellt …' : 'Konto erstellen' }}
   </button>
   @for (error of registerForm().errors(); track error.kind) {
-    <div role="alert" class="text-[13px] leading-[1.4] text-red-500" data-testid="signup-error-message">{{ error.message }}</div>
+    <div
+      role="alert"
+      class="text-[13px] leading-[1.4] text-red-500"
+      data-testid="signup-error-message"
+    >
+      {{ error.message }}
+    </div>
   }
   @if (registered()) {
-    <div role="status" class="text-[13px] leading-[1.4] text-[#d9c527]" data-testid="signup-success-message">
+    <div
+      role="status"
+      class="text-[13px] leading-[1.4] text-[#d9c527]"
+      data-testid="signup-success-message"
+    >
       Konto erstellt!
     </div>
   }
   <div class="text-[13px] leading-[1.45] text-pretty text-[#6f726f]">
-    Mit dem Erstellen akzeptierst du die Forenregeln. Benutzername und E-Mail müssen im Forum einmalig sein.
+    Mit dem Erstellen akzeptierst du die Forenregeln. Benutzername und E-Mail müssen im Forum
+    einmalig sein.
   </div>
 
   <div class="flex items-center gap-3.5">
     <div class="h-px flex-1 bg-[#171717]"></div>
-    <span class="text-[11px] leading-none font-bold tracking-[.08em] text-[#6f726f] uppercase">oder</span>
+    <span class="text-[11px] leading-none font-bold tracking-[.08em] text-[#6f726f] uppercase"
+      >oder</span
+    >
     <div class="h-px flex-1 bg-[#171717]"></div>
   </div>
 

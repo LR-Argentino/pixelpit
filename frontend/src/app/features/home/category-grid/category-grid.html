@@ -1,0 +1,18 @@
+<section aria-labelledby="category-grid-heading">
+  <app-section-heading
+    headingId="category-grid-heading"
+    title="Kategorien"
+    subtitle="Jeder Thread gehört zu genau einer Kategorie"
+  />
+  <ul class="m-0 mt-5 grid list-none grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 p-0">
+    @for (category of categories(); track category.slug) {
+      <li class="flex" data-testid="category-grid-category-item">
+        <app-category-card
+          class="w-full"
+          [category]="category"
+          [selected]="category.slug === activeSlug()"
+        />
+      </li>
+    }
+  </ul>
+</section>

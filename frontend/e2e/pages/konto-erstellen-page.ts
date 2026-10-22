@@ -33,8 +33,7 @@ export class KontoErstellenPage {
   }
 
   public async oeffnen(): Promise<void> {
-    // TODO: URL der Seite eintragen
-    await this.page.goto('');
+    await this.page.goto('http://localhost:4200');
   }
 
   public async benutzernameEingeben(wert: string): Promise<void> {

@@ -1,5 +1,5 @@
 ---
-description: "Playwright-E2E-Tests für eine Seite oder ein Feld erstellen (Page Object + Fixture + Spec)"
+description: 'Playwright-E2E-Tests für eine Seite oder ein Feld erstellen (Page Object + Fixture + Spec)'
 argument-hint: "Seite/Feld und Verhalten, z. B. 'Konto erstellen – E-Mail: ungültiges Format zeigt Fehler'"
 ---
 

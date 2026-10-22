@@ -9,7 +9,8 @@ describe('Login', () => {
   let element: HTMLElement;
 
   const byTestId = (id: string) => element.querySelector<HTMLElement>(`[data-testid="${id}"]`);
-  const allByTestId = (id: string) => Array.from(element.querySelectorAll<HTMLElement>(`[data-testid="${id}"]`));
+  const allByTestId = (id: string) =>
+    Array.from(element.querySelectorAll<HTMLElement>(`[data-testid="${id}"]`));
 
   const type = (id: string, value: string) => {
     const input = byTestId(id) as HTMLInputElement;
@@ -52,8 +53,12 @@ describe('Login', () => {
   it('shows required errors and sends nothing when submitted empty', async () => {
     await submitForm();
 
-    expect(byTestId('login-identifier-error-message')?.textContent).toContain('Bitte Benutzername oder E-Mail eingeben.');
-    expect(byTestId('login-password-error-message')?.textContent).toContain('Bitte das Passwort eingeben.');
+    expect(byTestId('login-identifier-error-message')?.textContent).toContain(
+      'Bitte Benutzername oder E-Mail eingeben.',
+    );
+    expect(byTestId('login-password-error-message')?.textContent).toContain(
+      'Bitte das Passwort eingeben.',
+    );
     httpTesting.expectNone('/api/auth/login');
   });
 
@@ -66,7 +71,9 @@ describe('Login', () => {
     expect(request.request.body).toEqual({ identifier: 'blackbird', password: 'Sicher_1234' });
     request.flush(null, { status: 204, statusText: 'No Content' });
     await fixture.whenStable();
-    httpTesting.expectOne('/api/auth/me').flush({ accountId: 1, email: 'test@mock.com', username: 'blackbird', role: 'USER' });
+    httpTesting
+      .expectOne('/api/auth/me')
+      .flush({ accountId: 1, email: 'test@mock.com', username: 'blackbird', role: 'USER' });
     await fixture.whenStable();
 
     expect(byTestId('login-error-message')).toBeNull();
@@ -77,12 +84,14 @@ describe('Login', () => {
     type('login-password-input', 'falsch');
     await submitForm();
 
-    httpTesting.expectOne('/api/auth/login').flush(
-      { title: 'Ungültige Zugangsdaten' }, { status: 401, statusText: 'Unauthorized' });
+    httpTesting
+      .expectOne('/api/auth/login')
+      .flush({ title: 'Ungültige Zugangsdaten' }, { status: 401, statusText: 'Unauthorized' });
     await settle();
 
-    expect(allByTestId('login-error-message').map((e) => e.textContent?.trim()))
-      .toEqual(['Benutzername, E-Mail oder Passwort ist falsch.']);
+    expect(allByTestId('login-error-message').map((e) => e.textContent?.trim())).toEqual([
+      'Benutzername, E-Mail oder Passwort ist falsch.',
+    ]);
   });
 
   it('shows a generic error when the backend fails', async () => {
@@ -90,7 +99,9 @@ describe('Login', () => {
     type('login-password-input', 'Sicher_1234');
     await submitForm();
 
-    httpTesting.expectOne('/api/auth/login').flush(null, { status: 500, statusText: 'Server Error' });
+    httpTesting
+      .expectOne('/api/auth/login')
+      .flush(null, { status: 500, statusText: 'Server Error' });
     await settle();
 
     expect(byTestId('login-error-message')?.textContent).toContain('Anmeldung fehlgeschlagen');

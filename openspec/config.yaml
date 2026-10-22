@@ -25,9 +25,12 @@ context: |
       nur POST /api/auth/login und POST /api/accounts sind ohne Login erreichbar
     - PostgreSQL 18 via Docker Compose, Schema ausschließlich über Liquibase-Changesets
       (db/changelog/changes, Hibernate nur `ddl-auto: validate`)
-    - Tests mit `./mvnw test` (Testcontainers, Docker muss laufen):
-      `*Tests` = Unit-Tests, `*IT` = Integrationstests (@WebMvcTest oder mit Datenbank),
-      Testmethoden nach dem Muster `methode_returnsX_whenY`
+    - Unit-Tests (`*Tests`, Surefire) mit `./mvnw test`
+    - Integrationstests (`*IT`, Failsafe; @WebMvcTest oder mit Datenbank) mit `./mvnw verify`;
+      `verify` führt auch die Unit-Tests aus. Testcontainers, Docker muss laufen
+    - Integrationstests räumen die Datenbank vor jedem Test auf (z. B. TRUNCATE in @BeforeEach),
+      damit sie unabhängig von Reihenfolge und vorherigen Läufen sind
+    - Testmethoden nach dem Muster `methode_returnsX_whenY`
 
   Fachbegriffe:
     - Account: Login-Daten (E-Mail, Passwort-Hash, Rolle USER/MODERATOR/ADMIN)
@@ -70,7 +73,7 @@ operations:
       - Aufgaben mit dem Vermerk "(selbst)" nicht umsetzen, sondern nur Hinweise geben, wo und wie anzufangen ist
       - Backend-Befehle im Ordner backend/ ausführen, Frontend-Befehle im Ordner frontend/
       - Bei Test-zuerst-Aufgaben prüfen, dass der neue Test vor der Umsetzung fehlschlägt
-      - Vor dem Abhaken einer Backend-Aufgabe `./mvnw test` laufen lassen, inklusive BackendApplicationModulithTests
+      - Vor dem Abhaken einer Backend-Aufgabe `./mvnw verify` laufen lassen (Unit- und Integrationstests, inklusive BackendApplicationModulithTests)
   archive:
     guidance:
       - Prüfen, ob backend/README.md oder frontend/CLAUDE.md angepasst werden müssen, und das nennen

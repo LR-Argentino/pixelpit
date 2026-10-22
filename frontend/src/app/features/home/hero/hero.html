@@ -1,0 +1,52 @@
+<img
+  ngSrc="cover-image.png"
+  fill
+  priority
+  alt=""
+  class="-z-20 object-cover object-[center_55%] opacity-60"
+/>
+<!-- Lesbarkeit: dunkel auf der Textseite, unten weicher Übergang in die Seite -->
+<div
+  class="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(10,10,10,.92)_0%,rgba(10,10,10,.7)_40%,rgba(10,10,10,.15)_100%)]"
+></div>
+<div
+  class="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(10,10,10,0)_45%,#0a0a0a_100%)]"
+></div>
+
+<h1
+  class="m-0 max-w-[620px] text-[40px] leading-[1.06] font-bold tracking-[-.025em] text-balance text-white"
+  data-testid="hero-title-heading"
+>
+  Das Forum für Leute, die Spiele bauen
+</h1>
+
+@if (authService.currentUser(); as user) {
+  <p
+    class="mt-4 max-w-[560px] text-[15px] leading-[1.55] text-pretty text-ink-050"
+    data-testid="hero-intro-text"
+  >
+    Engines, Code und Devlogs. Schön, dass du da bist,
+    <span class="font-semibold text-white">{{ user.username ?? user.email }}</span> — stell deine
+    Fragen oder zeig, woran du gerade arbeitest.
+  </p>
+} @else {
+  <p
+    class="mt-4 max-w-[560px] text-[15px] leading-[1.55] text-pretty text-ink-050"
+    data-testid="hero-intro-text"
+  >
+    Engines, Code und Devlogs. Alle Threads sind öffentlich lesbar — zum
+    <span class="font-semibold text-white">Kommentieren</span> und
+    <span class="font-semibold text-white">Threads erstellen</span> brauchst du ein kostenloses
+    Konto.
+  </p>
+}
+
+<div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+  @if (!authService.isAuthenticated()) {
+    <a appButton routerLink="/registrieren" data-testid="hero-register-link">Konto erstellen</a>
+  }
+  <p class="m-0 text-[13px] leading-none text-ink-050" data-testid="hero-stats-text">
+    <span class="font-semibold text-white">{{ stats().threadCount | number }} Threads</span>
+    · {{ stats().newPostsThisWeek | number }} neue Beiträge diese Woche
+  </p>
+</div>

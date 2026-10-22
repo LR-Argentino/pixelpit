@@ -1,0 +1,31 @@
+@let t = thread();
+<div class="min-w-0">
+  <div class="mb-2 flex flex-wrap items-center gap-2.5">
+    @if (t.category; as category) {
+      <app-badge data-testid="thread-row-category-text">{{ category.name }}</app-badge>
+    }
+    <span class="text-[13px] leading-none text-ink-200" data-testid="thread-row-created-text">
+      Erstellt am {{ t.createdAt | date: 'd. MMM y' }}
+    </span>
+  </div>
+
+  <h3 class="m-0 text-[17px] leading-[1.4] font-bold tracking-[-.01em] text-pretty text-white">
+    <!-- „stretched link“: das ::after-Element legt den Link über die ganze Zeile -->
+    <a
+      [routerLink]="['/threads', t.id]"
+      data-testid="thread-row-title-link"
+      class="rounded-[2px] focus-ring after:absolute after:inset-0 after:rounded-[4px] group-hover:underline group-hover:decoration-ink-400 group-hover:underline-offset-4"
+    >
+      {{ t.title }}
+    </a>
+  </h3>
+
+  @if (t.excerpt; as excerpt) {
+    <p
+      class="mt-2 mb-0 text-[15px] leading-normal text-pretty text-ink-100"
+      data-testid="thread-row-excerpt-text"
+    >
+      {{ excerpt }}
+    </p>
+  }
+</div>

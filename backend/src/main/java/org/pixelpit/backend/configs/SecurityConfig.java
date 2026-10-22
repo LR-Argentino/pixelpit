@@ -32,6 +32,7 @@ class SecurityConfig {
                 .csrf(CsrfConfigurer::spa)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/accounts").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/threads").permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )

@@ -1,0 +1,39 @@
+<!-- merge: eine gewählte Sortierung bleibt beim Wechsel der Kategorie erhalten; null entfernt den Parameter.
+     fragment: springt zur Thread-Liste, damit das Ergebnis des Filters sichtbar ist -->
+<a
+  routerLink="/"
+  [queryParams]="{ kategorie: selected() ? null : category().slug }"
+  queryParamsHandling="merge"
+  fragment="threads"
+  [attr.aria-current]="selected() ? 'true' : null"
+  data-testid="category-card-link"
+  class="group flex w-full flex-col rounded-[3px] border p-4 text-left transition-colors duration-150 ease-out focus-ring"
+  [class]="
+    selected() ? 'border-ink-200 bg-ink-650' : 'border-ink-550 bg-ink-800 hover:bg-[#141414]'
+  "
+>
+  <span
+    class="text-base leading-[1.3] font-bold tracking-[-.01em] text-white"
+    data-testid="category-card-name-text"
+  >
+    {{ category().name }}
+  </span>
+  <span
+    class="mt-2 text-[13px] leading-[1.45] text-pretty text-ink-100"
+    data-testid="category-card-description-text"
+  >
+    {{ category().description }}
+  </span>
+  <span
+    class="mt-auto flex items-center justify-between pt-4 text-[13px] leading-none text-ink-200"
+  >
+    <span data-testid="category-card-thread-count-text"
+      >{{ category().threadCount | number }} Threads</span
+    >
+    <app-icon
+      name="arrow-right"
+      [size]="14"
+      class="text-ink-200 transition-[color,transform] duration-150 ease-out group-hover:translate-x-0.5 group-hover:text-white"
+    />
+  </span>
+</a>

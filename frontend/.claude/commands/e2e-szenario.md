@@ -1,5 +1,5 @@
 ---
-description: "E2E-Szenario planen: legt nur das Gerüst (Checkliste + test.step.skip) an, keine Page-Logik"
+description: 'E2E-Szenario planen: legt nur das Gerüst (Checkliste + test.step.skip) an, keine Page-Logik'
 argument-hint: "Ablauf, z. B. 'Konto erstellen → Blog erstellen → Profil: Blog unter Meine Blogs sichtbar'"
 ---
 

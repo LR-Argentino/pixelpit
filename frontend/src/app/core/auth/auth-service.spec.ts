@@ -8,7 +8,12 @@ describe('AuthService', () => {
   let service: AuthService;
   let httpTesting: HttpTestingController;
 
-  const user: CurrentUser = { accountId: 1, email: 'test@mock.com', username: 'blackbird', role: 'USER' };
+  const user: CurrentUser = {
+    accountId: 1,
+    email: 'test@mock.com',
+    username: 'blackbird',
+    role: 'USER',
+  };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -54,8 +59,9 @@ describe('AuthService', () => {
 
   it('rejects and stays logged out when credentials are wrong', async () => {
     const login = service.login({ identifier: 'blackbird', password: 'falsch' });
-    httpTesting.expectOne('/api/auth/login').flush(
-      { title: 'Ungültige Zugangsdaten' }, { status: 401, statusText: 'Unauthorized' });
+    httpTesting
+      .expectOne('/api/auth/login')
+      .flush({ title: 'Ungültige Zugangsdaten' }, { status: 401, statusText: 'Unauthorized' });
 
     await expect(login).rejects.toBeDefined();
     expect(service.isAuthenticated()).toBe(false);

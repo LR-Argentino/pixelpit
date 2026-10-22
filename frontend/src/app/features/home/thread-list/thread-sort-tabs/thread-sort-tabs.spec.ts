@@ -7,7 +7,11 @@ async function render(active: 'neueste' | 'beliebt' | 'unbeantwortet') {
   const fixture = TestBed.createComponent(ThreadSortTabs);
   fixture.componentRef.setInput('active', active);
   await fixture.whenStable();
-  return Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="thread-sort-tabs-option-item"]'));
+  return Array.from(
+    (fixture.nativeElement as HTMLElement).querySelectorAll(
+      '[data-testid="thread-sort-tabs-option-item"]',
+    ),
+  );
 }
 
 describe('ThreadSortTabs', () => {

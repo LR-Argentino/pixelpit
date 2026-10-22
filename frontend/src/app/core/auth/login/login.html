@@ -7,7 +7,10 @@
   </div>
 
   <div>
-    <label for="login-identifier" class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase">
+    <label
+      for="login-identifier"
+      class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase"
+    >
       Benutzername oder E-Mail
     </label>
     <input
@@ -21,13 +24,21 @@
     />
     @if (submitted() && loginForm.identifier().invalid()) {
       @for (error of loginForm.identifier().errors(); track error.kind) {
-        <div class="mt-2 text-[13px] leading-[1.4] text-[#e0483c]" data-testid="login-identifier-error-message">{{ error.message }}</div>
+        <div
+          class="mt-2 text-[13px] leading-[1.4] text-[#e0483c]"
+          data-testid="login-identifier-error-message"
+        >
+          {{ error.message }}
+        </div>
       }
     }
   </div>
 
   <div>
-    <label for="login-password" class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase">
+    <label
+      for="login-password"
+      class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-[#a1a3a1] uppercase"
+    >
       Passwort
     </label>
     <input
@@ -41,14 +52,32 @@
     />
     @if (submitted() && loginForm.password().invalid()) {
       @for (error of loginForm.password().errors(); track error.kind) {
-        <div class="mt-2 text-[13px] leading-[1.4] text-[#e0483c]" data-testid="login-password-error-message">{{ error.message }}</div>
+        <div
+          class="mt-2 text-[13px] leading-[1.4] text-[#e0483c]"
+          data-testid="login-password-error-message"
+        >
+          {{ error.message }}
+        </div>
       }
     }
   </div>
 
   @for (error of loginForm().errors(); track error.kind) {
-    <div role="alert" class="flex items-start gap-2.5 rounded-[3px] border border-[#242424] px-3.5 py-3" data-testid="login-error-message">
-      <svg class="mt-px size-4 shrink-0 text-[#e0483c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <div
+      role="alert"
+      class="flex items-start gap-2.5 rounded-[3px] border border-[#242424] px-3.5 py-3"
+      data-testid="login-error-message"
+    >
+      <svg
+        class="mt-px size-4 shrink-0 text-[#e0483c]"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
         <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
         <path d="M12 9v4" />
         <path d="M12 17h.01" />
@@ -68,7 +97,9 @@
 
   <div class="flex items-center gap-3.5">
     <div class="h-px flex-1 bg-[#171717]"></div>
-    <span class="text-[11px] leading-none font-bold tracking-[.08em] text-[#6f726f] uppercase">oder</span>
+    <span class="text-[11px] leading-none font-bold tracking-[.08em] text-[#6f726f] uppercase"
+      >oder</span
+    >
     <div class="h-px flex-1 bg-[#171717]"></div>
   </div>
 

@@ -26,7 +26,9 @@ describe('Register', () => {
     const usernameErrorKinds = (value: string) => {
       const usernameField = component['registerForm'].username;
       usernameField().value.set(value);
-      const kinds = usernameField().errors().map((error) => error.kind);
+      const kinds = usernameField()
+        .errors()
+        .map((error) => error.kind);
       console.log(`username "${value}" -> errors: [${kinds.join(', ')}]`);
       return kinds;
     };
@@ -87,7 +89,9 @@ describe('Register', () => {
     const passwordErrorKinds = (value: string) => {
       const passwordField = component['registerForm'].password;
       passwordField().value.set(value);
-      const kinds = passwordField().errors().map((error) => error.kind);
+      const kinds = passwordField()
+        .errors()
+        .map((error) => error.kind);
       console.log(`password "${value}" -> errors: [${kinds.join(', ')}]`);
       return kinds;
     };
@@ -116,8 +120,13 @@ describe('Register', () => {
       const registerForm = component['registerForm'];
       registerForm.password().value.set(password);
       registerForm.confirmPassword().value.set(confirmPassword);
-      const kinds = registerForm.confirmPassword().errors().map((error) => error.kind);
-      console.log(`password "${password}", repeat "${confirmPassword}" -> errors: [${kinds.join(', ')}]`);
+      const kinds = registerForm
+        .confirmPassword()
+        .errors()
+        .map((error) => error.kind);
+      console.log(
+        `password "${password}", repeat "${confirmPassword}" -> errors: [${kinds.join(', ')}]`,
+      );
       return kinds;
     };
 
@@ -136,7 +145,10 @@ describe('Register', () => {
     it('re-validates the repeat when only the password changes', () => {
       expect(confirmPasswordErrorKinds('Geheim1!', 'Geheim1!')).toEqual([]);
       component['registerForm'].password().value.set('Anders2?');
-      const kinds = component['registerForm'].confirmPassword().errors().map((error) => error.kind);
+      const kinds = component['registerForm']
+        .confirmPassword()
+        .errors()
+        .map((error) => error.kind);
       console.log(`after password change -> repeat errors: [${kinds.join(', ')}]`);
       expect(kinds).toEqual(['fieldMismatch']);
     });
@@ -146,17 +158,29 @@ describe('Register', () => {
     const renderedEmailErrors = async () => {
       fixture.detectChanges();
       await fixture.whenStable();
-      const emailContainer = (fixture.nativeElement as HTMLElement).querySelector('#signup-email')!.parentElement!;
-      const messages = Array.from(emailContainer.querySelectorAll('.text-red-500'), (element) => element.textContent?.trim());
+      const emailContainer = (fixture.nativeElement as HTMLElement).querySelector(
+        '#signup-email',
+      )!.parentElement!;
+      const messages = Array.from(emailContainer.querySelectorAll('.text-red-500'), (element) =>
+        element.textContent?.trim(),
+      );
       console.log(`rendered email errors: ${JSON.stringify(messages)}`);
       return messages;
     };
 
     it('reports required for an empty email and email for a malformed one', () => {
       const emailField = component['registerForm'].email;
-      expect(emailField().errors().map((error) => error.kind)).toEqual(['required']);
+      expect(
+        emailField()
+          .errors()
+          .map((error) => error.kind),
+      ).toEqual(['required']);
       emailField().value.set('vera@');
-      expect(emailField().errors().map((error) => error.kind)).toEqual(['email']);
+      expect(
+        emailField()
+          .errors()
+          .map((error) => error.kind),
+      ).toEqual(['email']);
       emailField().value.set('vera@studio.dev');
       expect(emailField().errors()).toEqual([]);
     });
@@ -172,7 +196,12 @@ describe('Register', () => {
   });
 
   describe('submit', () => {
-    const validUser = { username: 'vera42', email: 'vera42@studio.dev', password: 'Geheim1!', confirmPassword: 'Geheim1!' };
+    const validUser = {
+      username: 'vera42',
+      email: 'vera42@studio.dev',
+      password: 'Geheim1!',
+      confirmPassword: 'Geheim1!',
+    };
 
     const submitForm = () => {
       component['registerUser'].set(validUser);
@@ -198,12 +227,19 @@ describe('Register', () => {
       fixture.detectChanges();
 
       const registerForm = component['registerForm'];
-      expect(component['registerUser']()).toEqual({ username: '', email: '', password: '', confirmPassword: '' });
+      expect(component['registerUser']()).toEqual({
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+      });
       expect(registerForm().touched()).toBe(false);
 
       const inputs = (fixture.nativeElement as HTMLElement).querySelectorAll('input');
       expect(Array.from(inputs, (input) => input.value)).toEqual(['', '', '', '']);
-      expect((fixture.nativeElement as HTMLElement).querySelectorAll('.text-red-500').length).toBe(0);
+      expect((fixture.nativeElement as HTMLElement).querySelectorAll('.text-red-500').length).toBe(
+        0,
+      );
     });
 
     it('shows a taken username on the username field', async () => {
@@ -213,40 +249,57 @@ describe('Register', () => {
       );
       await fixture.whenStable();
 
-      expect(component['registerForm'].username().errors().map((error) => error.message)).toEqual([
-        'Benutzername ist bereits vergeben',
-      ]);
+      expect(
+        component['registerForm']
+          .username()
+          .errors()
+          .map((error) => error.message),
+      ).toEqual(['Benutzername ist bereits vergeben']);
       expect(component['registered']()).toBe(false);
     });
 
     it('shows a taken email on the email field', async () => {
-      submitForm().flush({ title: 'Email existiert bereits!' }, { status: 409, statusText: 'Conflict' });
+      submitForm().flush(
+        { title: 'Email existiert bereits!' },
+        { status: 409, statusText: 'Conflict' },
+      );
       await fixture.whenStable();
 
-      expect(component['registerForm'].email().errors().map((error) => error.message)).toEqual([
-        'E-Mail wird bereits verwendet',
-      ]);
+      expect(
+        component['registerForm']
+          .email()
+          .errors()
+          .map((error) => error.message),
+      ).toEqual(['E-Mail wird bereits verwendet']);
     });
 
     it('maps backend validation errors to their fields', async () => {
       submitForm().flush(
-        { detail: 'Validierung fehlgeschlagen', errors: { username: ['Größe muss zwischen 3 und 20 sein'] } },
+        {
+          detail: 'Validierung fehlgeschlagen',
+          errors: { username: ['Größe muss zwischen 3 und 20 sein'] },
+        },
         { status: 400, statusText: 'Bad Request' },
       );
       await fixture.whenStable();
 
-      expect(component['registerForm'].username().errors().map((error) => error.message)).toEqual([
-        'Größe muss zwischen 3 und 20 sein',
-      ]);
+      expect(
+        component['registerForm']
+          .username()
+          .errors()
+          .map((error) => error.message),
+      ).toEqual(['Größe muss zwischen 3 und 20 sein']);
     });
 
     it('shows a general error for unexpected failures', async () => {
       submitForm().flush(null, { status: 500, statusText: 'Server Error' });
       await fixture.whenStable();
 
-      expect(component['registerForm']().errors().map((error) => error.message)).toEqual([
-        'Registrierung fehlgeschlagen. Bitte versuche es später erneut.',
-      ]);
+      expect(
+        component['registerForm']()
+          .errors()
+          .map((error) => error.message),
+      ).toEqual(['Registrierung fehlgeschlagen. Bitte versuche es später erneut.']);
     });
   });
 });

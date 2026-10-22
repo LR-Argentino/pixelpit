@@ -18,7 +18,15 @@ const SORT_HINTS: Record<ThreadSort, string> = {
 
 /** Thread-Liste mit Sortierung und Kategorie-Filter. Bekommt bereits gefilterte Threads, rechnet selbst nichts aus. */
 @Component({
-  imports: [RouterLink, Button, SectionHeading, NewThreadPrompt, ThreadCategoryFilter, ThreadRow, ThreadSortTabs],
+  imports: [
+    RouterLink,
+    Button,
+    SectionHeading,
+    NewThreadPrompt,
+    ThreadCategoryFilter,
+    ThreadRow,
+    ThreadSortTabs,
+  ],
   selector: 'app-thread-list',
   styleUrl: './thread-list.css',
   templateUrl: './thread-list.html',

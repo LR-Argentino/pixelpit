@@ -2,9 +2,9 @@
 
 ## Überblick
 
-| Art | Ort | Zweck |
-|---|---|---|
-| Seiten-Test | `e2e/specs/<seite>.spec.ts` | Ein Verhalten einer Seite (z. B. Fehlermeldung eines Feldes) |
+| Art           | Ort                                      | Zweck                                                                                     |
+| ------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Seiten-Test   | `e2e/specs/<seite>.spec.ts`              | Ein Verhalten einer Seite (z. B. Fehlermeldung eines Feldes)                              |
 | Szenario-Test | `e2e/specs/szenarien/<szenario>.spec.ts` | User-Journey über mehrere Seiten (z. B. Konto erstellen → Blog erstellen → Profil prüfen) |
 
 Weitere Teile:
@@ -15,12 +15,12 @@ Weitere Teile:
 
 Copilot-Dateien (im Repo-Root):
 
-| Datei | Zweck |
-|---|---|
+| Datei                                                 | Zweck                                                                |
+| ----------------------------------------------------- | -------------------------------------------------------------------- |
 | `.github/instructions/playwright-e2e.instructions.md` | Regeln, gelten automatisch für `e2e/**/*.ts` und `src/app/**/*.html` |
-| `.github/prompts/e2e-test.prompt.md` | `/e2e-test` – Seiten-Test erstellen |
-| `.github/prompts/e2e-szenario.prompt.md` | `/e2e-szenario` – Szenario planen (nur Gerüst) |
-| `.github/prompts/e2e-szenario-schritt.prompt.md` | `/e2e-szenario-schritt` – genau einen Szenario-Schritt umsetzen |
+| `.github/prompts/e2e-test.prompt.md`                  | `/e2e-test` – Seiten-Test erstellen                                  |
+| `.github/prompts/e2e-szenario.prompt.md`              | `/e2e-szenario` – Szenario planen (nur Gerüst)                       |
+| `.github/prompts/e2e-szenario-schritt.prompt.md`      | `/e2e-szenario-schritt` – genau einen Szenario-Schritt umsetzen      |
 
 ## Voraussetzungen
 
@@ -73,7 +73,7 @@ Ergebnis: `e2e/specs/szenarien/<szenario>.spec.ts` mit Checkliste im Kopfkomment
  */
 ```
 
-Kontrolle: `npm run e2e -- e2e/specs/szenarien/<szenario>.spec.ts` → grün, alle Steps *skipped*.
+Kontrolle: `npm run e2e -- e2e/specs/szenarien/<szenario>.spec.ts` → grün, alle Steps _skipped_.
 
 ### Schritt 1, 2, 3 …: eine Seite pro Aufruf
 
@@ -86,7 +86,7 @@ Copilot setzt den **ersten offenen** Schritt um und stoppt. Danach:
 1. **Prüfen** – Zusammenfassung von Copilot und Diff ansehen (Page, Fixture, Spec, ggf. `data-testid`).
 2. **URL eintragen** – bei neuer Page in `oeffnen()` das `goto('')` durch die URL ersetzen.
 3. **Testen** – `npm run e2e -- e2e/specs/szenarien/<szenario>.spec.ts --project=chromium --headed`
-   Fertige Steps laufen echt, offene sind *skipped*.
+   Fertige Steps laufen echt, offene sind _skipped_.
 4. **Committen** – wenn alles passt.
 5. Wieder `/e2e-szenario-schritt <szenario>.spec.ts` für den nächsten Schritt.
 

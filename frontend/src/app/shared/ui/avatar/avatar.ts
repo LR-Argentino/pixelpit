@@ -17,7 +17,8 @@ export function avatarColor(name: string): string {
   template: `{{ initial() }}`,
   host: {
     'aria-hidden': 'true',
-    class: 'inline-flex flex-none items-center justify-center rounded-full font-semibold text-ink-050',
+    class:
+      'inline-flex flex-none items-center justify-center rounded-full font-semibold text-ink-050',
     '[style.width.px]': 'size()',
     '[style.height.px]': 'size()',
     '[style.font-size.px]': 'fontSize()',

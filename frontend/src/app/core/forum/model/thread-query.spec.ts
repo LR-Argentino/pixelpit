@@ -1,7 +1,12 @@
 import { Thread } from './thread';
 import { queryThreads, toThreadSort } from './thread-query';
 
-function thread(id: string, categorySlug: string, replyCount: number, lastActivityAt: string): Thread {
+function thread(
+  id: string,
+  categorySlug: string,
+  replyCount: number,
+  lastActivityAt: string,
+): Thread {
   return {
     id,
     title: id,
@@ -25,11 +30,19 @@ const ids = (threads: Thread[]) => threads.map((t) => t.id);
 
 describe('queryThreads', () => {
   it('sollte nach letzter Aktivität sortieren, wenn „neueste“ gewählt ist', () => {
-    expect(ids(queryThreads(THREADS, { sort: 'neueste' }))).toEqual(['neu-offen', 'mittel', 'alt-beliebt']);
+    expect(ids(queryThreads(THREADS, { sort: 'neueste' }))).toEqual([
+      'neu-offen',
+      'mittel',
+      'alt-beliebt',
+    ]);
   });
 
   it('sollte nach Anzahl der Antworten sortieren, wenn „beliebt“ gewählt ist', () => {
-    expect(ids(queryThreads(THREADS, { sort: 'beliebt' }))).toEqual(['alt-beliebt', 'mittel', 'neu-offen']);
+    expect(ids(queryThreads(THREADS, { sort: 'beliebt' }))).toEqual([
+      'alt-beliebt',
+      'mittel',
+      'neu-offen',
+    ]);
   });
 
   it('sollte nur Threads ohne Antwort liefern, wenn „unbeantwortet“ gewählt ist', () => {
@@ -37,7 +50,9 @@ describe('queryThreads', () => {
   });
 
   it('sollte nur Threads der Kategorie liefern, wenn eine Kategorie gesetzt ist', () => {
-    expect(ids(queryThreads(THREADS, { sort: 'neueste', categorySlug: 'showcase' }))).toEqual(['mittel']);
+    expect(ids(queryThreads(THREADS, { sort: 'neueste', categorySlug: 'showcase' }))).toEqual([
+      'mittel',
+    ]);
   });
 
   it('sollte die Eingabeliste nicht verändern', () => {

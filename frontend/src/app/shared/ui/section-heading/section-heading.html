@@ -7,7 +7,12 @@
     {{ title() }}
   </h2>
   @if (subtitle(); as subtitle) {
-    <p class="mt-2 mb-0 text-[13px] leading-[1.4] text-ink-100" data-testid="section-heading-subtitle-text">{{ subtitle }}</p>
+    <p
+      class="mt-2 mb-0 text-[13px] leading-[1.4] text-ink-100"
+      data-testid="section-heading-subtitle-text"
+    >
+      {{ subtitle }}
+    </p>
   }
 </div>
 <ng-content />

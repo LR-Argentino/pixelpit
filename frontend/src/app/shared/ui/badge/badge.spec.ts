@@ -10,6 +10,8 @@ describe('Badge', () => {
     const fixture = TestBed.createComponent(Host);
     await fixture.whenStable();
 
-    expect((fixture.nativeElement as HTMLElement).querySelector('app-badge')?.textContent).toBe('Engines');
+    expect((fixture.nativeElement as HTMLElement).querySelector('app-badge')?.textContent).toBe(
+      'Engines',
+    );
   });
 });

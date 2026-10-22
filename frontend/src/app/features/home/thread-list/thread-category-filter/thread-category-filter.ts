@@ -2,7 +2,8 @@ import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Category } from '../../../../core/forum/model/category';
 
-const BASE = 'inline-flex h-[34px] items-center rounded-[4px] px-4 text-sm transition-colors duration-150 ease-out focus-ring';
+const BASE =
+  'inline-flex h-[34px] items-center rounded-[4px] px-4 text-sm transition-colors duration-150 ease-out focus-ring';
 
 /** Filter-Chips „Alle“ + je Kategorie; die Auswahl landet im Query-Parameter ?kategorie=. */
 @Component({

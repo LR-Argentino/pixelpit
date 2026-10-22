@@ -16,7 +16,9 @@ describe('CategoryGrid', () => {
   it('sollte für jede Kategorie eine Kachel anzeigen', async () => {
     const root = await render();
 
-    expect(root.querySelectorAll('[data-testid="category-grid-category-item"]').length).toBe(MOCK_CATEGORIES.length);
+    expect(root.querySelectorAll('[data-testid="category-grid-category-item"]').length).toBe(
+      MOCK_CATEGORIES.length,
+    );
   });
 
   it('sollte keine Kachel markieren, wenn kein Filter gesetzt ist', async () => {

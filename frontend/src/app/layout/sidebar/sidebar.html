@@ -1,4 +1,8 @@
-<a routerLink="/" data-testid="sidebar-logo-link" class="mb-4 flex items-center gap-2 rounded-[2px] focus-ring">
+<a
+  routerLink="/"
+  data-testid="sidebar-logo-link"
+  class="mb-4 flex items-center gap-2 rounded-[2px] focus-ring"
+>
   <app-logo />
   <span class="text-[17px] leading-[1.2] font-bold tracking-[-.02em] text-white">PixelPit</span>
 </a>
@@ -16,7 +20,10 @@
   />
 </label>
 
-<h2 class="m-0 px-3 pt-5 pb-2 text-xs leading-none font-normal text-ink-200" data-testid="sidebar-navigation-heading">
+<h2
+  class="m-0 px-3 pt-5 pb-2 text-xs leading-none font-normal text-ink-200"
+  data-testid="sidebar-navigation-heading"
+>
   Navigation
 </h2>
 <ul class="m-0 list-none p-0">
@@ -27,7 +34,10 @@
 
 <div class="-mx-[18px] my-3.5 h-px flex-none bg-ink-700"></div>
 
-<h2 class="m-0 px-3 pt-1.5 pb-2 text-xs leading-none font-normal text-ink-200" data-testid="sidebar-categories-heading">
+<h2
+  class="m-0 px-3 pt-1.5 pb-2 text-xs leading-none font-normal text-ink-200"
+  data-testid="sidebar-categories-heading"
+>
   Kategorien
 </h2>
 <ul class="m-0 list-none p-0">
@@ -43,13 +53,37 @@
     <p class="m-0 text-xs leading-[1.4] text-ink-200" data-testid="sidebar-user-text">
       Angemeldet als <span class="font-semibold text-white">{{ user.username ?? user.email }}</span>
     </p>
-    <button appButton variant="secondary" size="sm" [fullWidth]="true" type="button" (click)="logout()" data-testid="sidebar-logout-button">
+    <button
+      appButton
+      variant="secondary"
+      size="sm"
+      [fullWidth]="true"
+      type="button"
+      (click)="logout()"
+      data-testid="sidebar-logout-button"
+    >
       Abmelden
     </button>
   } @else {
-    <p class="m-0 text-xs leading-[1.4] text-ink-200" data-testid="sidebar-guest-hint">Du bist als Gast unterwegs.</p>
-    <a appButton size="sm" [fullWidth]="true" routerLink="/anmelden" data-testid="sidebar-login-link">Anmelden</a>
-    <a appButton variant="secondary" size="sm" [fullWidth]="true" routerLink="/registrieren" data-testid="sidebar-register-link">
+    <p class="m-0 text-xs leading-[1.4] text-ink-200" data-testid="sidebar-guest-hint">
+      Du bist als Gast unterwegs.
+    </p>
+    <a
+      appButton
+      size="sm"
+      [fullWidth]="true"
+      routerLink="/anmelden"
+      data-testid="sidebar-login-link"
+      >Anmelden</a
+    >
+    <a
+      appButton
+      variant="secondary"
+      size="sm"
+      [fullWidth]="true"
+      routerLink="/registrieren"
+      data-testid="sidebar-register-link"
+    >
       Registrieren
     </a>
   }

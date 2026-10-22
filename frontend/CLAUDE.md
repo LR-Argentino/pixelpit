@@ -109,10 +109,16 @@ import { test } from '../../fixture/fixture';
 
 test.describe('Szenario: Konto erstellen und Blog veröffentlichen', () => {
   test('sollte den neuen Blog unter „Meine Blogs“ anzeigen, wenn ein neues Konto einen Blog erstellt', async ({
-    kontoErstellenPage, blogErstellenPage, profilPage,
+    kontoErstellenPage,
+    blogErstellenPage,
+    profilPage,
   }) => {
     const id = Date.now();
-    const benutzer = { benutzername: `vera${id}`, email: `vera${id}@studio.dev`, passwort: 'Geheim1!' };
+    const benutzer = {
+      benutzername: `vera${id}`,
+      email: `vera${id}@studio.dev`,
+      passwort: 'Geheim1!',
+    };
     const blogTitel = `Mein erster Blog ${id}`;
 
     await test.step('Konto erstellen', async () => {

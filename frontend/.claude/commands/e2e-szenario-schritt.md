@@ -1,5 +1,5 @@
 ---
-description: "E2E-Szenario: genau einen Schritt (eine Seite) umsetzen und danach stoppen"
+description: 'E2E-Szenario: genau einen Schritt (eine Seite) umsetzen und danach stoppen'
 argument-hint: "Spec-Datei und optional Schritt, z. B. 'konto-und-blog-erstellen.spec.ts' oder 'konto-und-blog-erstellen.spec.ts Schritt 2'"
 ---
 

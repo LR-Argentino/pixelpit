@@ -4,7 +4,9 @@ import { SectionHeading } from './section-heading';
 
 @Component({
   imports: [SectionHeading],
-  template: `<app-section-heading title="Kategorien" subtitle="Untertitel" headingId="cat-heading"><button>Aktion</button></app-section-heading>`,
+  template: `<app-section-heading title="Kategorien" subtitle="Untertitel" headingId="cat-heading"
+    ><button>Aktion</button></app-section-heading
+  >`,
 })
 class Host {}
 
@@ -17,7 +19,9 @@ describe('SectionHeading', () => {
     const heading = root.querySelector('[data-testid="section-heading-title-heading"]');
     expect(heading?.textContent?.trim()).toBe('Kategorien');
     expect(heading?.id).toBe('cat-heading');
-    expect(root.querySelector('[data-testid="section-heading-subtitle-text"]')?.textContent).toBe('Untertitel');
+    expect(root.querySelector('[data-testid="section-heading-subtitle-text"]')?.textContent).toBe(
+      'Untertitel',
+    );
     expect(root.querySelector('button')?.textContent).toBe('Aktion');
   });
 
@@ -26,6 +30,10 @@ describe('SectionHeading', () => {
     fixture.componentRef.setInput('title', 'Nur Titel');
     await fixture.whenStable();
 
-    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="section-heading-subtitle-text"]')).toBeNull();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="section-heading-subtitle-text"]',
+      ),
+    ).toBeNull();
   });
 });

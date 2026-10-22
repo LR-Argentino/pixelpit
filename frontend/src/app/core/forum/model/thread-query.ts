@@ -16,8 +16,13 @@ export function toThreadSort(value: string | undefined): ThreadSort {
 }
 
 /** Filtert und sortiert Threads so, wie es später das Backend tun soll. */
-export function queryThreads(threads: readonly Thread[], { categorySlug, sort }: ThreadQuery): Thread[] {
-  let result = categorySlug ? threads.filter((thread) => thread.category.slug === categorySlug) : [...threads];
+export function queryThreads(
+  threads: readonly Thread[],
+  { categorySlug, sort }: ThreadQuery,
+): Thread[] {
+  let result = categorySlug
+    ? threads.filter((thread) => thread.category.slug === categorySlug)
+    : [...threads];
 
   if (sort === 'unbeantwortet') {
     result = result.filter((thread) => thread.replyCount === 0);

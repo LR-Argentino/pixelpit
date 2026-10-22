@@ -17,7 +17,12 @@ interface MainLink extends Omit<NavLink, 'locked'> {
 const MAIN_LINKS: MainLink[] = [
   { label: 'Startseite', icon: 'house', path: '/' },
   { label: 'Beliebt', icon: 'flame', path: '/', queryParams: { sortierung: 'beliebt' } },
-  { label: 'Unbeantwortet', icon: 'message-circle', path: '/', queryParams: { sortierung: 'unbeantwortet' } },
+  {
+    label: 'Unbeantwortet',
+    icon: 'message-circle',
+    path: '/',
+    queryParams: { sortierung: 'unbeantwortet' },
+  },
   { label: 'Benachrichtigungen', icon: 'bell', path: '/benachrichtigungen', membersOnly: true },
   { label: 'Meine Threads', icon: 'square-pen', path: '/meine-threads', membersOnly: true },
 ];
@@ -47,7 +52,10 @@ export class Sidebar {
 
   protected readonly mainLinks = computed<NavLink[]>(() => {
     const guest = !this.authService.isAuthenticated();
-    return MAIN_LINKS.map(({ membersOnly, ...link }) => ({ ...link, locked: guest && !!membersOnly }));
+    return MAIN_LINKS.map(({ membersOnly, ...link }) => ({
+      ...link,
+      locked: guest && !!membersOnly,
+    }));
   });
 
   protected readonly categoryLinks = computed<NavLink[]>(() =>

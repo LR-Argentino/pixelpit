@@ -40,5 +40,7 @@ export class AvatarStack {
   protected readonly shown = computed(() => this.users().slice(0, this.max()));
   protected readonly overflow = computed(() => this.users().length - this.shown().length);
   protected readonly overlap = computed(() => -this.size() * 0.32);
-  protected readonly label = computed(() => `${this.users().length} Teilnehmende: ${this.users().join(', ')}`);
+  protected readonly label = computed(
+    () => `${this.users().length} Teilnehmende: ${this.users().join(', ')}`,
+  );
 }

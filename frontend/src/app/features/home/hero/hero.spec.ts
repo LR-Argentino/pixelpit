@@ -16,7 +16,10 @@ async function render(user: CurrentUser | null = null) {
     providers: [
       provideRouter([]),
       { provide: LOCALE_ID, useValue: 'de' },
-      { provide: AuthService, useValue: { currentUser, isAuthenticated: computed(() => currentUser() !== null) } },
+      {
+        provide: AuthService,
+        useValue: { currentUser, isAuthenticated: computed(() => currentUser() !== null) },
+      },
     ],
   });
   const fixture = TestBed.createComponent(Hero);
@@ -24,13 +27,16 @@ async function render(user: CurrentUser | null = null) {
   return fixture.nativeElement as HTMLElement;
 }
 
-const byTestId = (root: HTMLElement, testId: string) => root.querySelector(`[data-testid="${testId}"]`);
+const byTestId = (root: HTMLElement, testId: string) =>
+  root.querySelector(`[data-testid="${testId}"]`);
 
 describe('Hero', () => {
   it('sollte die Überschrift anzeigen', async () => {
     const root = await render();
 
-    expect(byTestId(root, 'hero-title-heading')?.textContent?.trim()).toBe('Das Forum für Leute, die Spiele bauen');
+    expect(byTestId(root, 'hero-title-heading')?.textContent?.trim()).toBe(
+      'Das Forum für Leute, die Spiele bauen',
+    );
   });
 
   it('sollte die Statistik deutsch formatiert anzeigen', async () => {
@@ -48,7 +54,12 @@ describe('Hero', () => {
   });
 
   it('sollte angemeldete Nutzer begrüßen und keinen Registrierungs-Link zeigen', async () => {
-    const root = await render({ accountId: 1, email: 'vera@studio.dev', username: 'voxelvera', role: 'USER' });
+    const root = await render({
+      accountId: 1,
+      email: 'vera@studio.dev',
+      username: 'voxelvera',
+      role: 'USER',
+    });
 
     expect(byTestId(root, 'hero-register-link')).toBeNull();
     expect(byTestId(root, 'hero-intro-text')?.textContent).toContain('voxelvera');

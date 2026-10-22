@@ -12,7 +12,12 @@ describe('ForumService', () => {
   });
 
   it('sollte die vier Kategorien liefern', () => {
-    expect(service.categories().map((c) => c.name)).toEqual(['Engines', 'Programmierung', 'Showcase', 'Off-Topic']);
+    expect(service.categories().map((c) => c.name)).toEqual([
+      'Engines',
+      'Programmierung',
+      'Showcase',
+      'Off-Topic',
+    ]);
   });
 
   it('sollte die Thread-Anzahl aus allen Kategorien summieren', () => {

@@ -12,7 +12,8 @@ import { Button } from '../../../shared/ui/button/button';
   styleUrl: './hero.css',
   templateUrl: './hero.html',
   host: {
-    class: 'relative isolate block overflow-hidden border-b border-ink-700 bg-ink-850 px-11 pt-12 pb-10',
+    class:
+      'relative isolate block overflow-hidden border-b border-ink-700 bg-ink-850 px-11 pt-12 pb-10',
   },
 })
 export class Hero {

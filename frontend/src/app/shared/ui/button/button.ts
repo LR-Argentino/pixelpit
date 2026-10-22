@@ -13,7 +13,8 @@ const VARIANTS: Record<ButtonVariant, string> = {
     'border-ink-400 bg-transparent text-white hover:border-ink-200 hover:bg-white/5 disabled:hover:border-ink-400 disabled:hover:bg-transparent',
   ghost:
     'border-transparent bg-transparent text-ink-100 hover:bg-white/5 hover:text-white disabled:hover:bg-transparent disabled:hover:text-ink-100',
-  danger: 'border-danger/60 bg-danger/10 text-danger hover:bg-danger/20 disabled:hover:bg-danger/10',
+  danger:
+    'border-danger/60 bg-danger/10 text-danger hover:bg-danger/20 disabled:hover:bg-danger/10',
 };
 
 const SIZES: Record<ButtonSize, string> = {
@@ -32,6 +33,8 @@ export class Button {
   readonly fullWidth = input(false);
 
   protected readonly classes = computed(() =>
-    [BASE, VARIANTS[this.variant()], SIZES[this.size()], this.fullWidth() ? 'w-full' : ''].join(' '),
+    [BASE, VARIANTS[this.variant()], SIZES[this.size()], this.fullWidth() ? 'w-full' : ''].join(
+      ' ',
+    ),
   );
 }

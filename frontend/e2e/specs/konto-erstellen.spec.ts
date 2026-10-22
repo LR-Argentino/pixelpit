@@ -10,7 +10,6 @@ test.describe('Konto erstellen - Benutzername', () => {
     kontoErstellenPage,
   }) => {
     await kontoErstellenPage.benutzernameVerlassen();
-
     await expect(kontoErstellenPage.benutzernameErrorMessageText).toHaveText(
       'Benutzername erforderlich',
     );

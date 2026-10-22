@@ -7,7 +7,12 @@ import { CategoryCard } from './category-card';
 
 registerLocaleData(localeDe);
 
-const ENGINES = { slug: 'engines', name: 'Engines', description: 'Unity, Unreal und Godot.', threadCount: 1412 };
+const ENGINES = {
+  slug: 'engines',
+  name: 'Engines',
+  description: 'Unity, Unreal und Godot.',
+  threadCount: 1412,
+};
 
 async function render(selected: boolean) {
   TestBed.configureTestingModule({
@@ -21,15 +26,20 @@ async function render(selected: boolean) {
   return fixture.nativeElement as HTMLElement;
 }
 
-const byTestId = (root: HTMLElement, testId: string) => root.querySelector(`[data-testid="${testId}"]`);
+const byTestId = (root: HTMLElement, testId: string) =>
+  root.querySelector(`[data-testid="${testId}"]`);
 
 describe('CategoryCard', () => {
   it('sollte Name, Beschreibung und formatierte Thread-Anzahl anzeigen', async () => {
     const root = await render(false);
 
     expect(byTestId(root, 'category-card-name-text')?.textContent?.trim()).toBe('Engines');
-    expect(byTestId(root, 'category-card-description-text')?.textContent?.trim()).toBe('Unity, Unreal und Godot.');
-    expect(byTestId(root, 'category-card-thread-count-text')?.textContent?.trim()).toBe('1.412 Threads');
+    expect(byTestId(root, 'category-card-description-text')?.textContent?.trim()).toBe(
+      'Unity, Unreal und Godot.',
+    );
+    expect(byTestId(root, 'category-card-thread-count-text')?.textContent?.trim()).toBe(
+      '1.412 Threads',
+    );
   });
 
   it('sollte auf die Kategorie filtern, wenn sie nicht gewählt ist', async () => {

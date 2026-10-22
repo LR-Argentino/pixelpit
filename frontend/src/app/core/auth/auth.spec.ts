@@ -16,7 +16,9 @@ describe('Auth', () => {
   });
 
   const text = (testId: string) =>
-    (fixture.nativeElement as HTMLElement).querySelector(`[data-testid="${testId}"]`)?.textContent?.trim();
+    (fixture.nativeElement as HTMLElement)
+      .querySelector(`[data-testid="${testId}"]`)
+      ?.textContent?.trim();
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -39,7 +41,9 @@ describe('Auth', () => {
     fixture.componentRef.setInput('initialMode', 'login');
     await fixture.whenStable();
 
-    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('[data-testid="auth-register-button"]')?.click();
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('[data-testid="auth-register-button"]')
+      ?.click();
     await fixture.whenStable();
 
     expect(text('auth-title-heading')).toBe('Konto erstellen');

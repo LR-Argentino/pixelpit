@@ -1,7 +1,11 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: '', title: 'PixelPit', loadComponent: () => import('./features/home/home').then((m) => m.Home) },
+  {
+    path: '',
+    title: 'PixelPit',
+    loadComponent: () => import('./features/home/home').then((m) => m.Home),
+  },
   // data.initialMode wird über withComponentInputBinding() an das gleichnamige Input der Auth-Komponente gebunden
   {
     path: 'anmelden',

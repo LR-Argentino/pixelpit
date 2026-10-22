@@ -50,7 +50,9 @@ describe('ThreadRow', () => {
   it('sollte den Titel auf die Thread-Seite verlinken', async () => {
     const root = await render(thread());
 
-    expect(root.querySelector('[data-testid="thread-row-title-link"]')?.getAttribute('href')).toBe('/threads/navmesh');
+    expect(root.querySelector('[data-testid="thread-row-title-link"]')?.getAttribute('href')).toBe(
+      '/threads/navmesh',
+    );
   });
 
   it('sollte Mehrzahl verwenden, wenn es mehrere Antworten und Anhänge gibt', async () => {

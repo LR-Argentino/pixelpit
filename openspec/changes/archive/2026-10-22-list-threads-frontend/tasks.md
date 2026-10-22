@@ -108,7 +108,7 @@ Alle Befehle laufen im Ordner `frontend/`. „Test zuerst“ heißt: Den neuen T
 ## 8. Integration
 
 - [x] 8.1 `npm run build` läuft ohne Fehler und ohne Warnungen zu ungenutzten Imports, und `npm test` ist vollständig grün.
-- [ ] 8.2 Manuell prüfen, mit laufendem Backend und eingespieltem `backend/db/dev-seed.sql`. Im Browser unter `http://localhost:4200` muss gelten:
+- [x] 8.2 Manuell prüfen, mit laufendem Backend und eingespieltem `backend/db/dev-seed.sql`. Im Browser unter `http://localhost:4200` muss gelten:
   - Die neuesten Threads erscheinen.
   - „Ältere“ führt zu `?seite=2`, „Neuere“ führt zurück ohne `seite`.
   - `?seite=abc` zeigt Seite 1.

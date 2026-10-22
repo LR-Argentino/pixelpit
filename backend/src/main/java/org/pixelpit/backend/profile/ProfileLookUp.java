@@ -5,7 +5,10 @@ import org.pixelpit.backend.profile.internal.Profile;
 import org.pixelpit.backend.profile.internal.ProfileRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,5 +21,11 @@ public class ProfileLookUp {
 
     public Optional<String> findUsernameByAccountId(Integer accountId) {
         return profileRepository.findByAccountId(accountId).map(Profile::getUsername);
+    }
+
+    /** Benutzernamen zu mehreren Profil-IDs mit einer Abfrage; gelöschte Konten liefern "deleted-<id>". */
+    public Map<Integer, String> findUsernamesByProfileIds(Collection<Integer> profileIds) {
+        return profileRepository.findByIdIn(profileIds).stream()
+                .collect(Collectors.toMap(Profile::getId, Profile::getUsername));
     }
 }

@@ -166,10 +166,23 @@ class ThreadListIT {
     }
 
     @Test
+    void listThreads_excludesThread_whenOpeningPostIsDeleted() {
+        createThread("Sichtbarer Thread", "Text", Instant.parse("2026-09-20T10:00:00Z"));
+        deleteOpeningPost(createThread("Thread ohne Frage", "Text", Instant.parse("2026-09-22T10:00:00Z")));
+
+        MvcTestResult result = listThreads();
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.content.length()").isEqualTo(1);
+        assertThat(result).bodyJson().extractingPath("$.content[0].title").isEqualTo("Sichtbarer Thread");
+    }
+
+    @Test
     void listThreads_countsOnlyVisibleThreads_whenOneIsDeleted() {
         createThread("Erster Thread", "Text", Instant.parse("2026-09-20T10:00:00Z"));
         createThread("Zweiter Thread", "Text", Instant.parse("2026-09-21T10:00:00Z"));
         deleteThread(createThread("Gelöschter Thread", "Text", Instant.parse("2026-09-22T10:00:00Z")));
+        deleteOpeningPost(createThread("Thread ohne Frage", "Text", Instant.parse("2026-09-23T10:00:00Z")));
 
         assertThat(listThreads()).bodyJson().extractingPath("$.page.totalElements").isEqualTo(2);
     }
@@ -282,6 +295,14 @@ class ThreadListIT {
 
     private void deleteThread(int threadId) {
         jdbcTemplate.update("UPDATE threads SET deleted_at = now(), deleted_by = ? WHERE id = ?", profileId, threadId);
+    }
+
+    /** Löscht den Eröffnungspost (Post mit der kleinsten ID) per Soft Delete. */
+    private void deleteOpeningPost(int threadId) {
+        jdbcTemplate.update("""
+                UPDATE posts SET deleted_at = now(), deleted_by = ?
+                WHERE id = (SELECT min(id) FROM posts WHERE thread_id = ?)
+                """, profileId, threadId);
     }
 
     private void createPost(int threadId, String content, Instant createdAt) {

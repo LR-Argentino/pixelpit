@@ -1,4 +1,4 @@
-package org.pixelpit.backend.threads;
+package org.pixelpit.backend.threads.internal;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -7,33 +7,30 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Entity
-@Table(name = "threads")
+@Table(name = "posts")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ForumThread {
+public class Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "title", nullable = false, columnDefinition = "text")
-    private String title;
+    @Column(name = "content", nullable = false, columnDefinition = "text")
+    private String content;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "thread_id", nullable = false, updatable = false)
+    private ForumThread thread;
+
     @Column(name = "created_by", nullable = false, updatable = false)
     private Integer createdBy;
-
-    @Column(name = "solution_post_id")
-    private Integer solutionPostId;
 
     @Column(name = "updated_at")
     private Instant updatedAt;
@@ -43,15 +40,4 @@ public class ForumThread {
 
     @Column(name = "deleted_by")
     private Integer deletedBy;
-
-    @OneToMany(mappedBy = "thread")
-    private List<Post> posts = new ArrayList<>();
-
-    @ManyToMany
-    @JoinTable(
-            name = "threads_categories",
-            joinColumns = @JoinColumn(name = "thread_id"),
-            inverseJoinColumns = @JoinColumn(name = "category_id")
-    )
-    private Set<Category> categories = new HashSet<>();
 }

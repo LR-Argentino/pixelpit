@@ -1,4 +1,4 @@
-package org.pixelpit.backend.threads;
+package org.pixelpit.backend.threads.internal;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

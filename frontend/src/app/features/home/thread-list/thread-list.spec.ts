@@ -64,7 +64,9 @@ describe('ThreadList', () => {
 
     const items = Array.from(root.querySelectorAll('[data-testid="thread-list-thread-item"]'));
     expect(
-      items.map((item) => item.querySelector('[data-testid="thread-row-title-link"]')?.textContent?.trim()),
+      items.map((item) =>
+        item.querySelector('[data-testid="thread-row-title-link"]')?.textContent?.trim(),
+      ),
     ).toEqual(['Neuester', 'Mittlerer', 'Ältester']);
     expect(text(root, 'section-heading-subtitle-text')).toBe('Neueste zuerst');
     expect(text(root, 'thread-list-count-text')).toBe('3 Threads angezeigt');

@@ -57,7 +57,9 @@ const CATEGORIES = [
 ];
 
 const checkboxes = (root: HTMLElement) =>
-  Array.from(root.querySelectorAll<HTMLInputElement>('[data-testid="new-thread-category-checkbox"]'));
+  Array.from(
+    root.querySelectorAll<HTMLInputElement>('[data-testid="new-thread-category-checkbox"]'),
+  );
 
 /** Checkbox zu einer Kategorie, gefunden über den Text ihres Labels */
 const checkbox = (root: HTMLElement, name: string) =>

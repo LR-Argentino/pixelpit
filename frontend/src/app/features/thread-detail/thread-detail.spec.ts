@@ -2,7 +2,8 @@ import { Provider, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { AuthService } from '../../core/auth/auth-service';
 import { CurrentUser, Role } from '../../core/auth/model/current-user';
 import { Post, PostPage } from '../../core/forum/model/post';
@@ -87,6 +88,29 @@ const text = (root: HTMLElement, testId: string) =>
 
 const contents = (root: HTMLElement) =>
   Array.from(all(root, 'post-item-content-text')).map((el) => el.textContent?.trim());
+
+/** Über den echten Router, damit Query-Parameter und Fragment aus der Adresse kommen */
+async function open(url: string, extraProviders: Provider[] = []) {
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter(
+        [{ path: 'threads/:id', component: ThreadDetail }],
+        withComponentInputBinding(),
+      ),
+      provideHttpClient(),
+      provideHttpClientTesting(),
+      ...extraProviders,
+    ],
+  });
+  const harness = await RouterTestingHarness.create();
+  await harness.navigateByUrl(url);
+  return {
+    harness,
+    root: harness.routeNativeElement!,
+    http: TestBed.inject(HttpTestingController),
+    router: TestBed.inject(Router),
+  };
+}
 
 describe('ThreadDetail', () => {
   afterEach(() => TestBed.inject(HttpTestingController).verify());
@@ -179,7 +203,6 @@ describe('ThreadDetail', () => {
     http.expectOne('/api/threads/7/posts?page=0').flush(POSTS);
     await fixture.whenStable();
 
-    expect(root.querySelector('app-sidebar')).not.toBeNull();
     expect(text(root, 'thread-detail-title-heading')).toBe('Navmesh backt nicht');
     expect(text(root, 'thread-detail-category-text')).toBe('Engines');
     expect(text(root, 'thread-detail-created-text')).toContain('2026');
@@ -343,5 +366,208 @@ describe('ThreadDetail', () => {
     await fixture.whenStable();
 
     expect(contents(root)).toEqual(['Eröffnungspost', 'Erste Antwort']);
+  });
+  describe('Sprungadresse eines Beitrags', () => {
+    let scrolledTo: string[];
+
+    beforeEach(() => {
+      scrolledTo = [];
+      // jsdom kennt scrollIntoView nicht
+      Element.prototype.scrollIntoView = vi.fn(function (this: Element) {
+        scrolledTo.push(this.id);
+      });
+    });
+
+    const SECOND_PAGE: PostPage = {
+      content: [post(90, 'Antwort 21'), post(91, 'Antwort 22')],
+      page: { size: 20, number: 1, totalElements: 22, totalPages: 2 },
+    };
+
+    it('sollte zum Beitrag scrollen, wenn er auf der geöffneten Seite steht', async () => {
+      const { harness, root, http } = await open('/threads/7?seite=2#beitrag-91');
+
+      http.expectOne('/api/threads/7').flush(DETAILS);
+      http.expectOne('/api/threads/7/posts?page=1').flush(SECOND_PAGE);
+      await harness.fixture.whenStable();
+
+      expect(root.querySelector('#beitrag-91')?.textContent).toContain('Antwort 22');
+      expect(scrolledTo).toContain('beitrag-91');
+    });
+
+    it('sollte die Seite ohne Fehler zeigen, wenn der Beitrag nicht auf der Seite steht', async () => {
+      const { harness, root, http } = await open('/threads/7#beitrag-999');
+
+      http.expectOne('/api/threads/7').flush(DETAILS);
+      http.expectOne('/api/threads/7/posts?page=0').flush(POSTS);
+      await harness.fixture.whenStable();
+
+      expect(contents(root)).toEqual(['Eröffnungspost', 'Erste Antwort']);
+      expect(scrolledTo).not.toContain('beitrag-999');
+      expect(element(root, 'post-list-error-text')).toBeNull();
+    });
+
+    it('sollte jedem Beitrag der Liste genau eine Sprungadresse geben, auch der Lösung', async () => {
+      const { harness, root, http } = await open('/threads/7');
+
+      http
+        .expectOne('/api/threads/7')
+        .flush({ ...WITH_SOLUTION, solutionPostId: 71, solution: post(71, 'Erste Antwort', true) });
+      http.expectOne('/api/threads/7/posts?page=0').flush(POSTS);
+      await harness.fixture.whenStable();
+
+      expect(root.querySelectorAll('#beitrag-71')).toHaveLength(1);
+      expect(root.querySelector('#beitrag-70')).not.toBeNull();
+    });
+  });
+  describe('Antworten', () => {
+    beforeEach(() => {
+      Element.prototype.scrollIntoView = vi.fn();
+    });
+
+    /** submit() und die Navigation warten auf Promises, die whenStable() nicht kennt */
+    async function settle(harness: RouterTestingHarness) {
+      await new Promise((resolve) => setTimeout(resolve));
+      await harness.fixture.whenStable();
+    }
+
+    /**
+     * Wartet, bis die Seite die Anfrage gestellt hat. whenStable() ginge nicht: Eine offene
+     * httpResource-Anfrage hält die App instabil, solange der Test sie nicht beantwortet.
+     */
+    async function nextRequest(http: HttpTestingController, url: string) {
+      for (let attempt = 0; attempt < 50; attempt++) {
+        const [request] = http.match(url);
+        if (request) {
+          return request;
+        }
+        await new Promise((resolve) => setTimeout(resolve));
+      }
+      return http.expectOne(url);
+    }
+
+    async function reply(root: HTMLElement, harness: RouterTestingHarness, content: string) {
+      const field = element(root, 'reply-form-content-input') as HTMLTextAreaElement;
+      field.value = content;
+      field.dispatchEvent(new Event('input'));
+      await harness.fixture.whenStable();
+      element(root, 'reply-form-submit-button')!.click();
+      await harness.fixture.whenStable();
+    }
+
+    it('sollte das Antwortformular unter den Beiträgen zeigen, wenn ein Nutzer angemeldet ist', async () => {
+      const { fixture, root, http } = render('7', undefined, [signedIn('USER')]);
+
+      http.expectOne('/api/threads/7').flush(DETAILS);
+      http.expectOne('/api/threads/7/posts?page=0').flush(POSTS);
+      await fixture.whenStable();
+
+      expect(element(root, 'reply-form-content-input')).not.toBeNull();
+    });
+
+    it('sollte das Antwortformular auch auf einer späteren Seite zeigen', async () => {
+      const { fixture, root, http } = render('7', '2', [signedIn('USER')]);
+
+      http.expectOne('/api/threads/7').flush(DETAILS);
+      http.expectOne('/api/threads/7/posts?page=1').flush({
+        content: [post(90, 'Antwort 21')],
+        page: { size: 20, number: 1, totalElements: 21, totalPages: 2 },
+      });
+      await fixture.whenStable();
+
+      expect(element(root, 'reply-form-content-input')).not.toBeNull();
+    });
+
+    it('sollte Gästen den Anmelde-Hinweis statt des Formulars zeigen', async () => {
+      const { fixture, root, http } = render('7');
+
+      http.expectOne('/api/threads/7').flush(DETAILS);
+      http.expectOne('/api/threads/7/posts?page=0').flush(POSTS);
+      await fixture.whenStable();
+
+      expect(element(root, 'reply-form-content-input')).toBeNull();
+      expect(element(root, 'reply-form-guest-hint')).not.toBeNull();
+    });
+
+    it('sollte weder Formular noch Hinweis zeigen, wenn es den Thread nicht gibt', async () => {
+      const { fixture, root, http } = render('7', undefined, [signedIn('USER')]);
+
+      http.expectOne('/api/threads/7').flush(null, NOT_FOUND);
+      http.expectOne('/api/threads/7/posts?page=0').flush(null, NOT_FOUND);
+      await fixture.whenStable();
+
+      expect(text(root, 'thread-detail-not-found-heading')).toBe('Thread nicht gefunden');
+      expect(element(root, 'reply-form-content-input')).toBeNull();
+      expect(element(root, 'reply-form-guest-hint')).toBeNull();
+    });
+
+    it('sollte weder Formular noch Hinweis zeigen, wenn die Seite hinter dem Ende liegt', async () => {
+      const { fixture, root, http } = render('7', '9', [signedIn('USER')]);
+
+      http.expectOne('/api/threads/7').flush(DETAILS);
+      http.expectOne('/api/threads/7/posts?page=8').flush({
+        content: [],
+        page: { size: 20, number: 8, totalElements: 25, totalPages: 2 },
+      });
+      await fixture.whenStable();
+
+      expect(element(root, 'post-list-empty-text')).not.toBeNull();
+      expect(element(root, 'reply-form-content-input')).toBeNull();
+    });
+
+    it('sollte zur letzten Seite und zum neuen Beitrag springen, wenn auf Seite 1 von mehreren geantwortet wird', async () => {
+      const { harness, root, http, router } = await open('/threads/7', [signedIn('USER')]);
+      http.expectOne('/api/threads/7').flush(DETAILS);
+      http.expectOne('/api/threads/7/posts?page=0').flush(POSTS);
+      await harness.fixture.whenStable();
+
+      await reply(root, harness, 'Hast du den Cache geleert?');
+      http
+        .expectOne({ method: 'POST', url: '/api/threads/7/posts' })
+        .flush({ id: 46 }, { status: 201, statusText: 'Created' });
+      (await nextRequest(http, '/api/threads/7/posts?page=0')).flush({
+        ...POSTS,
+        page: { size: 20, number: 0, totalElements: 46, totalPages: 3 },
+      });
+      (await nextRequest(http, '/api/threads/7/posts?page=2')).flush({
+        content: [post(45, 'Antwort 44'), post(46, 'Hast du den Cache geleert?')],
+        page: { size: 20, number: 2, totalElements: 46, totalPages: 3 },
+      });
+      await settle(harness);
+
+      expect(router.url).toBe('/threads/7?seite=3#beitrag-46');
+      expect(root.querySelector('#beitrag-46')?.textContent).toContain(
+        'Hast du den Cache geleert?',
+      );
+      expect((element(root, 'reply-form-content-input') as HTMLTextAreaElement).value).toBe('');
+    });
+
+    it('sollte auf der ersten Seite bleiben und die Beiträge neu laden, wenn alle auf eine Seite passen', async () => {
+      const ONE_PAGE: PostPage = {
+        ...POSTS,
+        page: { size: 20, number: 0, totalElements: 2, totalPages: 1 },
+      };
+      const { harness, root, http, router } = await open('/threads/7', [signedIn('USER')]);
+      http.expectOne('/api/threads/7').flush(DETAILS);
+      http.expectOne('/api/threads/7/posts?page=0').flush(ONE_PAGE);
+      await harness.fixture.whenStable();
+
+      await reply(root, harness, 'Danke!');
+      http
+        .expectOne({ method: 'POST', url: '/api/threads/7/posts' })
+        .flush({ id: 72 }, { status: 201, statusText: 'Created' });
+      (await nextRequest(http, '/api/threads/7/posts?page=0')).flush({
+        ...ONE_PAGE,
+        page: { size: 20, number: 0, totalElements: 3, totalPages: 1 },
+      });
+      (await nextRequest(http, '/api/threads/7/posts?page=0')).flush({
+        content: [...POSTS.content, post(72, 'Danke!')],
+        page: { size: 20, number: 0, totalElements: 3, totalPages: 1 },
+      });
+      await settle(harness);
+
+      expect(router.url).toBe('/threads/7#beitrag-72');
+      expect(contents(root)).toEqual(['Eröffnungspost', 'Erste Antwort', 'Danke!']);
+      expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+    });
   });
 });

@@ -1,8 +1,8 @@
 import { Component, inject, output, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { form, FormField, required, submit, ValidationError } from '@angular/forms/signals';
-import { AuthService } from '../auth-service';
-import { LoginCredentials } from '../model/login-credentials';
+import { AuthService } from '../../../core/auth/auth-service';
+import { LoginCredentials } from '../../../core/auth/model/login-credentials';
 
 function emptyLoginCredentials(): LoginCredentials {
   return { identifier: '', password: '' };

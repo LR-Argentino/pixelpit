@@ -67,6 +67,22 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBe(false);
   });
 
+  it('resolves once the account is created', async () => {
+    const newUser = {
+      username: 'blackbird',
+      email: 'test@mock.com',
+      password: 'Sicher_1234',
+      confirmPassword: 'Sicher_1234',
+    };
+    const registering: Promise<void> = service.register(newUser);
+
+    const request = httpTesting.expectOne({ method: 'POST', url: '/api/accounts' });
+    expect(request.request.body).toEqual(newUser);
+    request.flush(null, { status: 201, statusText: 'Created' });
+
+    await expect(registering).resolves.toBeUndefined();
+  });
+
   it('clears the user and fetches a fresh CSRF cookie after logout', async () => {
     const loading = service.loadCurrentUser();
     httpTesting.expectOne('/api/auth/me').flush(user);

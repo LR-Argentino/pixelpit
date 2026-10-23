@@ -38,9 +38,7 @@ export class ForumService {
 
   /** Legt einen Thread samt Eröffnungsbeitrag an und liefert seine ID. */
   public async createThread(request: CreateThreadRequest): Promise<number> {
-    const created = await firstValueFrom(
-      this.http.post<{ id: number }>('/api/threads', request),
-    );
+    const created = await firstValueFrom(this.http.post<{ id: number }>('/api/threads', request));
     return created.id;
   }
 
@@ -78,5 +76,20 @@ export class ForumService {
         ? undefined
         : { url: `/api/threads/${threadId}/posts`, params: { page: page() - 1 } };
     });
+  }
+
+  /** Einmaliger Abruf einer Seite (1-basiert), z. B. um nach dem Antworten die letzte Seite zu kennen. */
+  public postPage(threadId: number, page: number): Promise<PostPage> {
+    return firstValueFrom(
+      this.http.get<PostPage>(`/api/threads/${threadId}/posts`, { params: { page: page - 1 } }),
+    );
+  }
+
+  /** Hängt einen Beitrag an einen Thread an und liefert seine ID. */
+  public async createPost(threadId: number, content: string): Promise<number> {
+    const created = await firstValueFrom(
+      this.http.post<{ id: number }>(`/api/threads/${threadId}/posts`, { content }),
+    );
+    return created.id;
   }
 }

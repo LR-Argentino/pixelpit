@@ -1,6 +1,6 @@
 import { computed, inject, Service, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom, Observable } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { RegisterUser } from './model/register-user';
 import { CurrentUser } from './model/current-user';
 import { LoginCredentials } from './model/login-credentials';
@@ -13,8 +13,8 @@ export class AuthService {
   public readonly currentUser = this.user.asReadonly();
   public readonly isAuthenticated = computed(() => this.user() !== null);
 
-  public register(user: RegisterUser): Observable<void> {
-    return this.http.post<void>('/api/accounts', user);
+  public async register(user: RegisterUser): Promise<void> {
+    await firstValueFrom(this.http.post<void>('/api/accounts', user));
   }
 
   public async loadCurrentUser(): Promise<void> {

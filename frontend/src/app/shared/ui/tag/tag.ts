@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 const TONES = {
   ok: 'text-success shadow-[inset_0_0_0_1px_var(--color-success)] bg-success/10',
@@ -18,7 +18,5 @@ const TONES = {
 export class Tag {
   readonly tone = input<keyof typeof TONES>('neutral');
 
-  protected toneClass(): string {
-    return TONES[this.tone()];
-  }
+  protected readonly toneClass = computed(() => TONES[this.tone()]);
 }

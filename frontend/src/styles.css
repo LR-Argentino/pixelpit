@@ -17,18 +17,24 @@ html {
   --color-ink-850: #0a0a0a;
   --color-ink-800: #0e0e0e;
   --color-ink-750: #121212;
+  --color-ink-725: #141414;
   --color-ink-700: #171717;
   --color-ink-650: #1a1a1a;
   --color-ink-600: #1e1e1e;
   --color-ink-550: #242424;
   --color-ink-500: #2a2a2a;
   --color-ink-400: #3a3a3a;
+  /* Platzhalter und Hinweistexte */
+  --color-ink-300: #6f726f;
   /* gedämpfter Text, ≥ 4.5:1 auf Karten (WCAG AA) */
   --color-ink-200: #8a8d8a;
   --color-ink-100: #a1a3a1;
   --color-ink-050: #d4d5d4;
   --color-success: #34c24c;
   --color-danger: #e0483c;
+  /* Gold für „Konto erstellen“/„Anmelden“ als Zweitaktion und Erfolgsmeldung der Registrierung */
+  --color-gold: #d9c527;
+  --color-gold-dim: #b5892f;
   --color-hero: #0d1a0f;
 
   @keyframes float {

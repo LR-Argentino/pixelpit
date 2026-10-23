@@ -200,4 +200,35 @@ describe('ForumService', () => {
       await expect(created).rejects.toBeInstanceOf(HttpErrorResponse);
     });
   });
+  describe('Beiträge verfassen', () => {
+    it('sollte den Beitrag per POST anlegen und die neue ID liefern', async () => {
+      const created = service.createPost(7, 'Hast du den Cache geleert?');
+      const req = http.expectOne({ method: 'POST', url: '/api/threads/7/posts' });
+      expect(req.request.body).toEqual({ content: 'Hast du den Cache geleert?' });
+      req.flush({ id: 46 }, { status: 201, statusText: 'Created' });
+
+      await expect(created).resolves.toBe(46);
+    });
+
+    it('sollte mit dem HTTP-Fehler ablehnen, wenn das Backend mit 404 antwortet', async () => {
+      const created = service.createPost(7, 'Text');
+      http
+        .expectOne({ method: 'POST', url: '/api/threads/7/posts' })
+        .flush({ title: 'Thread nicht gefunden' }, { status: 404, statusText: 'Not Found' });
+
+      await expect(created).rejects.toBeInstanceOf(HttpErrorResponse);
+    });
+
+    it('sollte eine Seite der Beiträge einmalig laden, Seite 1 als page=0', async () => {
+      const POST_PAGE: PostPage = {
+        content: [],
+        page: { size: 20, number: 0, totalElements: 45, totalPages: 3 },
+      };
+
+      const loaded = service.postPage(7, 1);
+      http.expectOne('/api/threads/7/posts?page=0').flush(POST_PAGE);
+
+      await expect(loaded).resolves.toEqual(POST_PAGE);
+    });
+  });
 });

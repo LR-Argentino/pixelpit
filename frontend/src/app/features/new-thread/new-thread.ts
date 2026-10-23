@@ -1,18 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
-import {
-  FieldTree,
-  form,
-  FormField,
-  SchemaPath,
-  submit,
-  validate,
-  ValidationError,
-} from '@angular/forms/signals';
+import { form, FormField, submit, validate } from '@angular/forms/signals';
 import { AuthService } from '../../core/auth/auth-service';
 import { ForumService } from '../../core/forum/forum-service';
-import { Sidebar } from '../../layout/sidebar/sidebar';
+import { problemDetailErrors } from '../../shared/forms/problem-detail';
+import { codePointLength, requiredTrimmed } from '../../shared/forms/validators';
 import { Button } from '../../shared/ui/button/button';
 
 const MAX_CATEGORIES = 2;
@@ -27,73 +19,13 @@ function emptyNewThread(): NewThreadForm {
   return { title: '', content: '', categoryIds: [] };
 }
 
-/** Pflichtfeld, bei dem nur Leerzeichen als leer gelten – wie @NotBlank im Backend */
-function requiredTrimmed(path: SchemaPath<string>, message: string) {
-  validate(path, ({ value }) =>
-    value().trim() === '' ? { kind: 'requiredTrimmed', message } : null,
-  );
-}
-
-/**
- * Länge ohne Ränder in Unicode-Zeichen, wie @CodePointLength im Backend. minLength/maxLength
- * zählen UTF-16-Einheiten und würden „🎮🎮🎮🎮“ (4 Zeichen, 8 Einheiten) als gültig durchlassen.
- */
-export function codePointLength(path: SchemaPath<string>, min: number, max: number) {
-  validate(path, ({ value }) => {
-    const trimmed = value().trim();
-    const length = [...trimmed].length;
-    if (trimmed === '') {
-      return null; // leer → nur requiredTrimmed meldet einen Fehler
-    }
-    if (length < min) {
-      return { kind: 'minCodePoints', message: `Mindestens ${min} Zeichen` };
-    }
-    return length > max
-      ? { kind: 'maxCodePoints', message: `Höchstens ${max.toLocaleString('de-DE')} Zeichen` }
-      : null;
-  });
-}
-
-// Übersetzt die ProblemDetail-Antworten des Backends in Formularfehler
-function toServerErrors(
-  error: unknown,
-  threadForm: FieldTree<NewThreadForm>,
-): ValidationError.WithOptionalFieldTree[] {
-  if (error instanceof HttpErrorResponse) {
-    if (error.status === 400 && error.error?.errors) {
-      const fieldErrors = error.error.errors as Partial<Record<keyof NewThreadForm, string[]>>;
-      const fields: (keyof NewThreadForm)[] = ['title', 'content', 'categoryIds'];
-      return fields.flatMap((field) =>
-        (fieldErrors[field] ?? []).map((message) => ({
-          kind: 'server',
-          fieldTree: threadForm[field],
-          message,
-        })),
-      );
-    }
-    if (error.status === 401) {
-      return [
-        {
-          kind: 'sessionExpired',
-          message: 'Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.',
-        },
-      ];
-    }
-  }
-  return [
-    {
-      kind: 'server',
-      message: 'Thread konnte nicht erstellt werden. Bitte versuche es später erneut.',
-    },
-  ];
-}
-
 /** Formular für einen neuen Thread; Gäste sehen stattdessen einen Hinweis zur Anmeldung. */
 @Component({
-  imports: [RouterLink, FormField, Sidebar, Button],
+  imports: [RouterLink, FormField, Button],
   selector: 'app-new-thread',
   styleUrl: './new-thread.css',
   templateUrl: './new-thread.html',
+  host: { class: 'block' },
 })
 export class NewThread {
   protected readonly authService = inject(AuthService);
@@ -124,7 +56,7 @@ export class NewThread {
       this.threadForm.categoryIds().invalid(),
   );
 
-  protected readonly selectedCount =computed(() => this.model().categoryIds.length);
+  protected readonly selectedCount = computed(() => this.model().categoryIds.length);
 
   protected isSelected(id: number): boolean {
     return this.model().categoryIds.includes(id);
@@ -159,7 +91,10 @@ export class NewThread {
         await this.router.navigate(['/threads', id]);
         return undefined;
       } catch (error) {
-        return toServerErrors(error, this.threadForm);
+        return problemDetailErrors(error, this.threadForm, ['title', 'content', 'categoryIds'], {
+          fallbackMessage: 'Thread konnte nicht erstellt werden. Bitte versuche es später erneut.',
+          sessionExpired: true,
+        });
       }
     });
   }

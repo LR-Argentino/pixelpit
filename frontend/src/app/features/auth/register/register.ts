@@ -1,8 +1,7 @@
 import { Component, inject, output, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
-import { RegisterUser } from '../model/register-user';
-import { AuthService } from '../auth-service';
+import { RegisterUser } from '../../../core/auth/model/register-user';
+import { AuthService } from '../../../core/auth/auth-service';
 import {
   email,
   FieldTree,
@@ -17,6 +16,7 @@ import {
   validate,
   ValidationError,
 } from '@angular/forms/signals';
+import { problemDetailErrors } from '../../../shared/forms/problem-detail';
 
 function validUsername(path: SchemaPath<string>) {
   minLength(path, 3, { message: 'Mindestens 3 Zeichen' });
@@ -57,7 +57,7 @@ function emptyRegisterUser(): RegisterUser {
   return { username: '', email: '', password: '', confirmPassword: '' };
 }
 
-// Übersetzt die ProblemDetail-Antworten des Backends in Formularfehler
+// Sonderfälle der Registrierung (409, Passwort-Abweichung); alles andere übernimmt problemDetailErrors
 function toServerErrors(
   error: unknown,
   registerForm: FieldTree<RegisterUser>,
@@ -79,18 +79,12 @@ function toServerErrors(
         { kind: 'server', fieldTree: registerForm.email, message: 'E-Mail wird bereits verwendet' },
       ];
     }
-    if (error.status === 400 && problem?.errors) {
-      const fieldErrors = problem.errors as Partial<Record<keyof RegisterUser, string[]>>;
-      const fields: (keyof RegisterUser)[] = ['username', 'email', 'password', 'confirmPassword'];
-      return fields.flatMap((field) =>
-        (fieldErrors[field] ?? []).map((message) => ({
-          kind: 'server',
-          fieldTree: registerForm[field],
-          message,
-        })),
-      );
-    }
-    if (error.status === 400 && problem?.title === 'Passwörter stimmen nicht überein!') {
+    // Ohne `errors`, sonst gewinnen die Feldfehler wie bisher
+    if (
+      error.status === 400 &&
+      !problem?.errors &&
+      problem?.title === 'Passwörter stimmen nicht überein!'
+    ) {
       return [
         {
           kind: 'server',
@@ -100,9 +94,12 @@ function toServerErrors(
       ];
     }
   }
-  return [
-    { kind: 'server', message: 'Registrierung fehlgeschlagen. Bitte versuche es später erneut.' },
-  ];
+  return problemDetailErrors(
+    error,
+    registerForm,
+    ['username', 'email', 'password', 'confirmPassword'],
+    { fallbackMessage: 'Registrierung fehlgeschlagen. Bitte versuche es später erneut.' },
+  );
 }
 
 @Component({
@@ -138,7 +135,7 @@ export class Register {
     event.preventDefault();
     submit(this.registerForm, async () => {
       try {
-        await firstValueFrom(this.authService.register(this.registerUser()));
+        await this.authService.register(this.registerUser());
         this.registered.set(true);
         this.registerForm().reset(emptyRegisterUser()); // leert die Felder und setzt touched/dirty zurück
         return undefined;

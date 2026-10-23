@@ -1,0 +1,87 @@
+@if (authService.isAuthenticated()) {
+  <form class="flex flex-col gap-3" (submit)="onSubmit($event)">
+    <label
+      for="reply-form-content"
+      class="block text-xs leading-none font-bold tracking-[.07em] text-ink-100 uppercase"
+      data-testid="reply-form-content-label-text"
+    >
+      Deine Antwort
+    </label>
+    <div>
+      <textarea
+        id="reply-form-content"
+        [formField]="replyForm.content"
+        rows="6"
+        data-testid="reply-form-content-input"
+        aria-describedby="reply-form-content-hint"
+        placeholder="Schreib eine Antwort …"
+        class="w-full rounded-[4px] border border-transparent bg-ink-650 px-3 py-2.5 text-sm leading-[1.5] text-white transition-colors duration-[120ms] outline-none placeholder:text-ink-300 focus:border-ink-400"
+      ></textarea>
+      @if (replyForm.content().invalid() && replyForm.content().touched()) {
+        @for (error of replyForm.content().errors(); track error.kind) {
+          <div
+            class="mt-1 text-[13px] leading-[1.4] text-danger"
+            data-testid="reply-form-content-error-message"
+          >
+            {{ error.message }}
+          </div>
+        }
+      }
+      <div
+        id="reply-form-content-hint"
+        class="mt-2 text-[13px] leading-[1.4] text-ink-300"
+        data-testid="reply-form-content-hint"
+      >
+        Markdown wird unterstützt
+      </div>
+    </div>
+    <div>
+      <button
+        appButton
+        type="submit"
+        data-testid="reply-form-submit-button"
+        [disabled]="contentInvalid() || replyForm().submitting()"
+      >
+        {{ replyForm().submitting() ? 'Wird gesendet …' : 'Antworten' }}
+      </button>
+    </div>
+    @for (error of replyForm().errors(); track error.kind) {
+      @if (error.kind === 'sessionExpired') {
+        <div role="alert" class="text-[13px] leading-[1.4] text-danger">
+          <span data-testid="reply-form-session-expired-text">{{ error.message }}</span>
+          <a
+            routerLink="/anmelden"
+            class="ml-1 rounded-[2px] text-white underline focus-ring"
+            data-testid="reply-form-login-link"
+            >Zur Anmeldung</a
+          >
+        </div>
+      } @else {
+        <div
+          role="alert"
+          class="text-[13px] leading-[1.4] text-danger"
+          data-testid="reply-form-error-message"
+        >
+          {{ error.message }}
+        </div>
+      }
+    }
+  </form>
+} @else {
+  <div class="rounded-[3px] border border-dashed border-ink-500 px-6 py-8 text-center">
+    <p class="m-0 text-[15px] leading-[1.4] text-ink-100" data-testid="reply-form-guest-hint">
+      Antworten — nur für angemeldete Mitglieder
+    </p>
+    <div class="mt-5 flex justify-center">
+      <a
+        appButton
+        variant="secondary"
+        size="sm"
+        routerLink="/anmelden"
+        data-testid="reply-form-guest-login-link"
+      >
+        Anmelden
+      </a>
+    </div>
+  </div>
+}

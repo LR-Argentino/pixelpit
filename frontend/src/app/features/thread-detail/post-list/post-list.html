@@ -51,7 +51,8 @@
     <ol class="m-0 flex list-none flex-col gap-4 p-0">
       <!-- Der Eröffnungsbeitrag ist laut Spec immer der erste Beitrag auf Seite 1 -->
       @for (post of page.content; track post.id; let first = $first) {
-        <li data-testid="post-list-post-item">
+        <!-- Sprungadresse hier statt im PostItem, das in der Lösungskarte ein zweites Mal erscheint -->
+        <li [id]="'beitrag-' + post.id" class="scroll-mt-6" data-testid="post-list-post-item">
           <app-post-item
             [post]="post"
             [opening]="currentPage() === 1 && first"

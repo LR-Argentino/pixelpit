@@ -74,7 +74,9 @@ describe('Register', () => {
       await fixture.whenStable();
 
       const messages = Array.from(
-        (fixture.nativeElement as HTMLElement).querySelectorAll('.text-red-500'),
+        (fixture.nativeElement as HTMLElement).querySelectorAll(
+          '[data-testid="signup-username-error-message"]',
+        ),
         (element) => element.textContent?.trim(),
       );
       console.log(`rendered username errors: ${JSON.stringify(messages)}`);
@@ -161,8 +163,9 @@ describe('Register', () => {
       const emailContainer = (fixture.nativeElement as HTMLElement).querySelector(
         '#signup-email',
       )!.parentElement!;
-      const messages = Array.from(emailContainer.querySelectorAll('.text-red-500'), (element) =>
-        element.textContent?.trim(),
+      const messages = Array.from(
+        emailContainer.querySelectorAll('[data-testid="signup-email-error-message"]'),
+        (element) => element.textContent?.trim(),
       );
       console.log(`rendered email errors: ${JSON.stringify(messages)}`);
       return messages;
@@ -237,9 +240,10 @@ describe('Register', () => {
 
       const inputs = (fixture.nativeElement as HTMLElement).querySelectorAll('input');
       expect(Array.from(inputs, (input) => input.value)).toEqual(['', '', '', '']);
-      expect((fixture.nativeElement as HTMLElement).querySelectorAll('.text-red-500').length).toBe(
-        0,
-      );
+      expect(
+        (fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid$="-error-message"]')
+          .length,
+      ).toBe(0);
     });
 
     it('shows a taken username on the username field', async () => {

@@ -65,14 +65,6 @@ const titles = (root: HTMLElement) =>
 describe('Home', () => {
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
-  it('sollte Sidebar und Hauptbereich anzeigen', async () => {
-    const { root, http } = render();
-    http.expectOne('/api/threads?page=0');
-
-    expect(root.querySelector('app-sidebar')).not.toBeNull();
-    expect(root.querySelector('main')).not.toBeNull();
-  });
-
   it('sollte die Seite aus ?seite= laden und ihre Threads zeigen', async () => {
     const { fixture, root, http } = render('2');
 

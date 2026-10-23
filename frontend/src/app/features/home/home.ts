@@ -1,17 +1,17 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { ForumService } from '../../core/forum/forum-service';
 import { toPageNumber } from '../../core/forum/model/thread-page';
-import { Sidebar } from '../../layout/sidebar/sidebar';
 import { CategoryGrid } from './category-grid/category-grid';
 import { Hero } from './hero/hero';
 import { ThreadList } from './thread-list/thread-list';
 
-/** Startseite: setzt die einzelnen Bereiche zusammen, enthält selbst keine Logik. */
+/** Startseite: setzt die einzelnen Bereiche zusammen, enthält selbst keine Logik. Sidebar kommt aus der Shell. */
 @Component({
-  imports: [Sidebar, Hero, CategoryGrid, ThreadList],
+  imports: [Hero, CategoryGrid, ThreadList],
   selector: 'app-home',
   styleUrl: './home.css',
   templateUrl: './home.html',
+  host: { class: 'block' },
 })
 export class Home {
   private readonly forumService = inject(ForumService);

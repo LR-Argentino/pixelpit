@@ -1,10 +1,13 @@
 import { Component, inject, input, linkedSignal } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Register } from './register/register';
 import { Login } from './login/login';
-import { AuthService } from './auth-service';
+import { AuthService } from '../../core/auth/auth-service';
+import { Icon } from '../../shared/ui/icon/icon';
 
 @Component({
-  imports: [Register, Login],
+  imports: [NgOptimizedImage, RouterLink, Register, Login, Icon],
   selector: 'app-auth',
   styleUrl: './auth.css',
   templateUrl: './auth.html',

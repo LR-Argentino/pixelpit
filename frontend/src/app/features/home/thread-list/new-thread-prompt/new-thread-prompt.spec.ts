@@ -25,9 +25,9 @@ describe('NewThreadPrompt', () => {
     expect(
       root.querySelector('[data-testid="new-thread-prompt-login-link"]')?.getAttribute('href'),
     ).toBe('/anmelden');
-    expect(
-      root.querySelector('[data-testid="new-thread-prompt-hint"]')?.textContent?.trim(),
-    ).toBe('Neuen Thread erstellen — nur für angemeldete Mitglieder');
+    expect(root.querySelector('[data-testid="new-thread-prompt-hint"]')?.textContent?.trim()).toBe(
+      'Neuen Thread erstellen — nur für angemeldete Mitglieder',
+    );
     expect(root.querySelector('[data-testid="new-thread-prompt-create-link"]')).toBeNull();
   });
 

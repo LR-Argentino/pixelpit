@@ -62,36 +62,17 @@
       }
     </ol>
 
-    @if (hasPrevious() || hasNext()) {
-      <nav aria-label="Seiten der Beiträge" class="mt-6 flex justify-between gap-4">
-        @if (hasPrevious()) {
-          <a
-            appButton
-            variant="secondary"
-            size="sm"
-            [routerLink]="['/threads', threadId()]"
-            [queryParams]="{ seite: previousPage() }"
-            fragment="beitraege"
-            data-testid="post-list-previous-link"
-          >
-            Vorherige
-          </a>
-        }
-        @if (hasNext()) {
-          <a
-            appButton
-            variant="secondary"
-            size="sm"
-            class="ml-auto"
-            [routerLink]="['/threads', threadId()]"
-            [queryParams]="{ seite: nextPage() }"
-            fragment="beitraege"
-            data-testid="post-list-next-link"
-          >
-            Nächste
-          </a>
-        }
-      </nav>
-    }
+    <app-pagination
+      [currentPage]="currentPage()"
+      [totalPages]="page.page.totalPages"
+      [link]="['/threads', threadId()]"
+      fragment="beitraege"
+      ariaLabel="Seiten der Beiträge"
+      previousLabel="Vorherige"
+      nextLabel="Nächste"
+      testIdPrefix="post-list"
+      previousRole="previous"
+      nextRole="next"
+    />
   }
 </section>

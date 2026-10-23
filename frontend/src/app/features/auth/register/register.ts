@@ -17,6 +17,8 @@ import {
   ValidationError,
 } from '@angular/forms/signals';
 import { problemDetailErrors } from '../../../shared/forms/problem-detail';
+import { Input } from '../../../shared/ui/input/input';
+import { FieldErrors } from '../../../shared/ui/field-errors/field-errors';
 
 function validUsername(path: SchemaPath<string>) {
   minLength(path, 3, { message: 'Mindestens 3 Zeichen' });
@@ -103,7 +105,7 @@ function toServerErrors(
 }
 
 @Component({
-  imports: [FormField],
+  imports: [FormField, Input, FieldErrors],
   selector: 'app-register',
   styleUrl: './register.css',
   templateUrl: './register.html',

@@ -13,20 +13,16 @@
         [formField]="replyForm.content"
         rows="6"
         data-testid="reply-form-content-input"
-        aria-describedby="reply-form-content-hint"
+        aria-describedby="reply-form-content-hint reply-form-content-errors"
         placeholder="Schreib eine Antwort …"
-        class="w-full rounded-[4px] border border-transparent bg-ink-650 px-3 py-2.5 text-sm leading-[1.5] text-white transition-colors duration-[120ms] outline-none placeholder:text-ink-300 focus:border-ink-400"
+        appInput
       ></textarea>
-      @if (replyForm.content().invalid() && replyForm.content().touched()) {
-        @for (error of replyForm.content().errors(); track error.kind) {
-          <div
-            class="mt-1 text-[13px] leading-[1.4] text-danger"
-            data-testid="reply-form-content-error-message"
-          >
-            {{ error.message }}
-          </div>
-        }
-      }
+      <app-field-errors
+        [field]="replyForm.content"
+        [show]="replyForm.content().invalid() && replyForm.content().touched()"
+        errorId="reply-form-content-errors"
+        testId="reply-form-content-error-message"
+      />
       <div
         id="reply-form-content-hint"
         class="mt-2 text-[13px] leading-[1.4] text-ink-300"

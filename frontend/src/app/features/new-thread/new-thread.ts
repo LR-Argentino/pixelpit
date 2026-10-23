@@ -6,6 +6,8 @@ import { ForumService } from '../../core/forum/forum-service';
 import { problemDetailErrors } from '../../shared/forms/problem-detail';
 import { codePointLength, requiredTrimmed } from '../../shared/forms/validators';
 import { Button } from '../../shared/ui/button/button';
+import { Input } from '../../shared/ui/input/input';
+import { FieldErrors } from '../../shared/ui/field-errors/field-errors';
 
 const MAX_CATEGORIES = 2;
 
@@ -21,7 +23,7 @@ function emptyNewThread(): NewThreadForm {
 
 /** Formular für einen neuen Thread; Gäste sehen stattdessen einen Hinweis zur Anmeldung. */
 @Component({
-  imports: [RouterLink, FormField, Button],
+  imports: [RouterLink, FormField, Button, Input, FieldErrors],
   selector: 'app-new-thread',
   styleUrl: './new-thread.css',
   templateUrl: './new-thread.html',

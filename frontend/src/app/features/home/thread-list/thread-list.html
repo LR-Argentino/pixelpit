@@ -80,39 +80,19 @@
         }
       </ol>
 
-      @if (hasNewer() || hasOlder()) {
-        <nav aria-label="Seiten der Thread-Liste" class="mt-6 flex justify-between gap-4">
-          @if (hasNewer()) {
-            <a
-              appButton
-              variant="secondary"
-              size="sm"
-              routerLink="/"
-              [queryParams]="{ seite: newerPage() }"
-              queryParamsHandling="merge"
-              fragment="threads"
-              data-testid="thread-list-newer-link"
-            >
-              Neuere
-            </a>
-          }
-          @if (hasOlder()) {
-            <a
-              appButton
-              variant="secondary"
-              size="sm"
-              class="ml-auto"
-              routerLink="/"
-              [queryParams]="{ seite: olderPage() }"
-              queryParamsHandling="merge"
-              fragment="threads"
-              data-testid="thread-list-older-link"
-            >
-              Ältere
-            </a>
-          }
-        </nav>
-      }
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalPages]="page.page.totalPages"
+        link="/"
+        fragment="threads"
+        queryParamsHandling="merge"
+        ariaLabel="Seiten der Thread-Liste"
+        previousLabel="Neuere"
+        nextLabel="Ältere"
+        testIdPrefix="thread-list"
+        previousRole="newer"
+        nextRole="older"
+      />
     }
   }
 </section>

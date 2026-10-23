@@ -21,18 +21,18 @@ Aufgaben mit dem Vermerk **(selbst)** setzt der Tester um. Claude gibt dabei nur
 
 ## 2. Frontend – UI-Bausteine
 
-- [ ] 2.1 **(selbst)** Vitest `shared/ui/input/input.spec.ts` schreiben: Die Direktive setzt die Basisklassen an `input` und `textarea`, und eigene Klassen am Element bleiben erhalten. Rot sehen, dann `appInput` nach dem Muster von `appButton` mit Tokens (`bg-ink-650`, `focus:border-ink-400`, `placeholder:text-ink-200`) umsetzen und grün sehen (Design, Entscheidung 2).
-- [ ] 2.2 **(selbst)** Alle Eingabefelder in `login.html`, `register.html`, `new-thread.html` und `reply-form.html` auf `appInput` umstellen und dabei den langen `class`-String entfernen. Die `data-testid`-Menge bleibt gleich, alle Specs grün.
-- [ ] 2.3 **(selbst)** Vitest `shared/ui/field-errors/field-errors.spec.ts` schreiben: Bei `show` = false ist nichts sichtbar. Bei `show` = true erscheint je Fehler eine Meldung mit dem übergebenen `testId`. Der Container trägt die übergebene `errorId`. Rot sehen, dann umsetzen (Design, Entscheidung 3) und grün sehen.
-- [ ] 2.4 **(selbst)** Die Fehlerblöcke in den vier Formularen durch `<app-field-errors>` ersetzen. Login übergibt `submitted() && …`, alle anderen `touched()`. Jedes Feld bekommt `aria-describedby` mit Hinweis- und Fehler-`id`. Die bestehenden Fehler-Tests der vier Formulare bleiben grün.
-- [ ] 2.5 **(selbst)** Vitest `shared/ui/pagination/pagination.spec.ts` schreiben und rot sehen. Abzudecken sind:
+- [x] 2.1 Vitest `shared/ui/input/input.spec.ts` schreiben: Die Direktive setzt die Basisklassen an `input` und `textarea`, und eigene Klassen am Element bleiben erhalten. Rot sehen, dann `appInput` nach dem Muster von `appButton` mit Tokens (`bg-ink-650`, `focus:border-ink-400`, `placeholder:text-ink-200`) umsetzen und grün sehen (Design, Entscheidung 2).
+- [x] 2.2 Alle Eingabefelder in `login.html`, `register.html`, `new-thread.html` und `reply-form.html` auf `appInput` umstellen und dabei den langen `class`-String entfernen. Die `data-testid`-Menge bleibt gleich, alle Specs grün.
+- [x] 2.3 Vitest `shared/ui/field-errors/field-errors.spec.ts` schreiben: Bei `show` = false ist nichts sichtbar. Bei `show` = true erscheint je Fehler eine Meldung mit dem übergebenen `testId`. Der Container trägt die übergebene `errorId`. Rot sehen, dann umsetzen (Design, Entscheidung 3) und grün sehen.
+- [x] 2.4 Die Fehlerblöcke in den vier Formularen durch `<app-field-errors>` ersetzen. Login übergibt `submitted() && …`, alle anderen `touched()`. Jedes Feld bekommt `aria-describedby` mit Hinweis- und Fehler-`id`. Die bestehenden Fehler-Tests der vier Formulare bleiben grün.
+- [x] 2.5 Vitest `shared/ui/pagination/pagination.spec.ts` schreiben und rot sehen. Abzudecken sind:
   - Seite 1 von 1 zeigt keine Navigation.
   - Seite 1 von 3 zeigt nur „weiter“ mit `seite=2`.
   - Seite 2 zeigt „zurück“ ohne `seite`.
   - Die `data-testid` werden aus Präfix und Rollen gebildet.
 
   Danach umsetzen (Design, Entscheidung 4) und grün sehen.
-- [ ] 2.6 **(selbst)** `<app-pagination>` in `thread-list.html` (`queryParamsHandling="merge"`, Fragment `threads`) und `post-list.html` (Fragment `beitraege`) einsetzen und die `computed`-Signale für das Blättern aus beiden Komponenten entfernen. Die Blätter-Tests in `thread-list.spec.ts`, `post-list.spec.ts`, `home.spec.ts` und `thread-detail.spec.ts` bleiben grün.
+- [x] 2.6 `<app-pagination>` in `thread-list.html` (`queryParamsHandling="merge"`, Fragment `threads`) und `post-list.html` (Fragment `beitraege`) einsetzen und die `computed`-Signale für das Blättern aus beiden Komponenten entfernen. Die Blätter-Tests in `thread-list.spec.ts`, `post-list.spec.ts`, `home.spec.ts` und `thread-detail.spec.ts` bleiben grün.
 
 ## 3. Frontend – Struktur
 

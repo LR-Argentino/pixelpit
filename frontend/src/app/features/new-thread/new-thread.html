@@ -23,21 +23,18 @@
         <input
           id="new-thread-title"
           [formField]="threadForm.title"
+          aria-describedby="new-thread-title-errors"
           type="text"
           data-testid="new-thread-title-input"
           placeholder="Worum geht es?"
-          class="h-10 w-full rounded-[4px] border border-transparent bg-ink-650 px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-ink-300 focus:border-ink-400"
+          appInput
         />
-        @if (threadForm.title().invalid() && threadForm.title().touched()) {
-          @for (error of threadForm.title().errors(); track error.kind) {
-            <div
-              class="mt-1 text-[13px] leading-[1.4] text-danger"
-              data-testid="new-thread-title-error-message"
-            >
-              {{ error.message }}
-            </div>
-          }
-        }
+        <app-field-errors
+          [field]="threadForm.title"
+          [show]="threadForm.title().invalid() && threadForm.title().touched()"
+          errorId="new-thread-title-errors"
+          testId="new-thread-title-error-message"
+        />
       </div>
 
       <div>
@@ -52,20 +49,16 @@
           [formField]="threadForm.content"
           rows="10"
           data-testid="new-thread-content-input"
-          aria-describedby="new-thread-content-hint"
+          aria-describedby="new-thread-content-hint new-thread-content-errors"
           placeholder="Beschreibe deine Frage so genau wie möglich."
-          class="w-full rounded-[4px] border border-transparent bg-ink-650 px-3 py-2.5 text-sm leading-[1.5] text-white transition-colors duration-[120ms] outline-none placeholder:text-ink-300 focus:border-ink-400"
+          appInput
         ></textarea>
-        @if (threadForm.content().invalid() && threadForm.content().touched()) {
-          @for (error of threadForm.content().errors(); track error.kind) {
-            <div
-              class="mt-1 text-[13px] leading-[1.4] text-danger"
-              data-testid="new-thread-content-error-message"
-            >
-              {{ error.message }}
-            </div>
-          }
-        }
+        <app-field-errors
+          [field]="threadForm.content"
+          [show]="threadForm.content().invalid() && threadForm.content().touched()"
+          errorId="new-thread-content-errors"
+          testId="new-thread-content-error-message"
+        />
         <div
           id="new-thread-content-hint"
           class="mt-2 text-[13px] leading-[1.4] text-ink-300"
@@ -75,7 +68,7 @@
         </div>
       </div>
 
-      <fieldset class="m-0 border-0 p-0">
+      <fieldset class="m-0 border-0 p-0" aria-describedby="new-thread-categories-errors">
         <legend
           class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-ink-100 uppercase"
         >
@@ -133,16 +126,12 @@
             bis zu 2 Kategorien
           </div>
         }
-        @if (threadForm.categoryIds().invalid() && threadForm.categoryIds().touched()) {
-          @for (error of threadForm.categoryIds().errors(); track error.kind) {
-            <div
-              class="mt-1 text-[13px] leading-[1.4] text-danger"
-              data-testid="new-thread-categories-error-message"
-            >
-              {{ error.message }}
-            </div>
-          }
-        }
+        <app-field-errors
+          [field]="threadForm.categoryIds"
+          [show]="threadForm.categoryIds().invalid() && threadForm.categoryIds().touched()"
+          errorId="new-thread-categories-errors"
+          testId="new-thread-categories-error-message"
+        />
       </fieldset>
 
       <div class="flex items-center gap-3">

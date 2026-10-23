@@ -3,6 +3,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { form, FormField, required, submit, ValidationError } from '@angular/forms/signals';
 import { AuthService } from '../../../core/auth/auth-service';
 import { LoginCredentials } from '../../../core/auth/model/login-credentials';
+import { Input } from '../../../shared/ui/input/input';
+import { FieldErrors } from '../../../shared/ui/field-errors/field-errors';
 
 function emptyLoginCredentials(): LoginCredentials {
   return { identifier: '', password: '' };
@@ -21,7 +23,7 @@ function toServerError(error: unknown): ValidationError.WithOptionalFieldTree[] 
 }
 
 @Component({
-  imports: [FormField],
+  imports: [FormField, Input, FieldErrors],
   selector: 'app-login',
   styleUrl: './login.css',
   templateUrl: './login.html',

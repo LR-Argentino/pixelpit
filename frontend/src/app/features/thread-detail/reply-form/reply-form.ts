@@ -7,6 +7,8 @@ import { ForumService } from '../../../core/forum/forum-service';
 import { problemDetailErrors } from '../../../shared/forms/problem-detail';
 import { codePointLength, requiredTrimmed } from '../../../shared/forms/validators';
 import { Button } from '../../../shared/ui/button/button';
+import { Input } from '../../../shared/ui/input/input';
+import { FieldErrors } from '../../../shared/ui/field-errors/field-errors';
 
 interface ReplyDraft {
   content: string;
@@ -28,7 +30,7 @@ function toServerErrors(
 
 /** Antwort auf einen Thread; Gäste sehen stattdessen einen Hinweis zur Anmeldung. Navigiert nicht selbst. */
 @Component({
-  imports: [RouterLink, FormField, Button],
+  imports: [RouterLink, FormField, Button, Input, FieldErrors],
   selector: 'app-reply-form',
   templateUrl: './reply-form.html',
   host: { class: 'mt-10 block' },

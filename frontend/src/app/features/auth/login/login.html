@@ -16,22 +16,19 @@
     <input
       id="login-identifier"
       [formField]="loginForm.identifier"
+      aria-describedby="login-identifier-errors"
       type="text"
       data-testid="login-identifier-input"
       autocomplete="username"
       placeholder="voxelvera oder du@studio.dev"
-      class="h-10 w-full rounded-[4px] border border-transparent bg-ink-650 px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-ink-300 focus:border-ink-400"
+      appInput
     />
-    @if (submitted() && loginForm.identifier().invalid()) {
-      @for (error of loginForm.identifier().errors(); track error.kind) {
-        <div
-          class="mt-2 text-[13px] leading-[1.4] text-danger"
-          data-testid="login-identifier-error-message"
-        >
-          {{ error.message }}
-        </div>
-      }
-    }
+    <app-field-errors
+      [field]="loginForm.identifier"
+      [show]="submitted() && loginForm.identifier().invalid()"
+      errorId="login-identifier-errors"
+      testId="login-identifier-error-message"
+    />
   </div>
 
   <div>
@@ -44,22 +41,19 @@
     <input
       id="login-password"
       [formField]="loginForm.password"
+      aria-describedby="login-password-errors"
       type="password"
       data-testid="login-password-input"
       autocomplete="current-password"
       placeholder="Dein Passwort"
-      class="h-10 w-full rounded-[4px] border border-transparent bg-ink-650 px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-ink-300 focus:border-ink-400"
+      appInput
     />
-    @if (submitted() && loginForm.password().invalid()) {
-      @for (error of loginForm.password().errors(); track error.kind) {
-        <div
-          class="mt-2 text-[13px] leading-[1.4] text-danger"
-          data-testid="login-password-error-message"
-        >
-          {{ error.message }}
-        </div>
-      }
-    }
+    <app-field-errors
+      [field]="loginForm.password"
+      [show]="submitted() && loginForm.password().invalid()"
+      errorId="login-password-errors"
+      testId="login-password-error-message"
+    />
   </div>
 
   @for (error of loginForm().errors(); track error.kind) {

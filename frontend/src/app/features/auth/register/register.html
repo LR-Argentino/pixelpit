@@ -13,22 +13,18 @@
       data-testid="signup-username-input"
       autocomplete="username"
       placeholder="z. B. voxelvera"
-      aria-describedby="signup-username-hint"
-      class="h-10 w-full rounded-[4px] border border-transparent bg-ink-650 px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-ink-300 focus:border-ink-400"
+      aria-describedby="signup-username-hint signup-username-errors"
+      appInput
     />
     <div id="signup-username-hint" class="mt-2 text-[13px] leading-[1.4] text-ink-300">
       3 bis 20 Zeichen, einmalig im Forum
     </div>
-    @if (registerForm.username().invalid() && registerForm.username().touched()) {
-      @for (error of registerForm.username().errors(); track error.kind) {
-        <div
-          class="mt-1 text-[13px] leading-[1.4] text-danger"
-          data-testid="signup-username-error-message"
-        >
-          {{ error.message }}
-        </div>
-      }
-    }
+    <app-field-errors
+      [field]="registerForm.username"
+      [show]="registerForm.username().invalid() && registerForm.username().touched()"
+      errorId="signup-username-errors"
+      testId="signup-username-error-message"
+    />
   </div>
 
   <div>
@@ -45,22 +41,18 @@
       data-testid="signup-email-input"
       autocomplete="email"
       placeholder="du@studio.dev"
-      aria-describedby="signup-email-hint"
-      class="h-10 w-full rounded-[4px] border border-transparent bg-ink-650 px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-ink-300 focus:border-ink-400"
+      aria-describedby="signup-email-hint signup-email-errors"
+      appInput
     />
     <div id="signup-email-hint" class="mt-2 text-[13px] leading-[1.4] text-ink-300">
       Für den Bestätigungslink, nie öffentlich sichtbar
     </div>
-    @if (registerForm.email().invalid() && registerForm.email().touched()) {
-      @for (error of registerForm.email().errors(); track error.kind) {
-        <div
-          class="mt-1 text-[13px] leading-[1.4] text-danger"
-          data-testid="signup-email-error-message"
-        >
-          {{ error.message }}
-        </div>
-      }
-    }
+    <app-field-errors
+      [field]="registerForm.email"
+      [show]="registerForm.email().invalid() && registerForm.email().touched()"
+      errorId="signup-email-errors"
+      testId="signup-email-error-message"
+    />
   </div>
 
   <div>
@@ -77,22 +69,18 @@
       autocomplete="new-password"
       data-testid="signup-password-input"
       placeholder="Mindestens 8 Zeichen"
-      aria-describedby="signup-password-hint"
-      class="h-10 w-full rounded-[4px] border border-transparent bg-ink-650 px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-ink-300 focus:border-ink-400"
+      aria-describedby="signup-password-hint signup-password-errors"
+      appInput
     />
     <div id="signup-password-hint" class="mt-2 text-[13px] leading-[1.4] text-ink-300">
       Mindestens 8 Zeichen, mit Großbuchstabe, Ziffer und Sonderzeichen
     </div>
-    @if (registerForm.password().invalid() && registerForm.password().touched()) {
-      @for (error of registerForm.password().errors(); track error.kind) {
-        <div
-          class="mt-1 text-[13px] leading-[1.4] text-danger"
-          data-testid="signup-password-error-message"
-        >
-          {{ error.message }}
-        </div>
-      }
-    }
+    <app-field-errors
+      [field]="registerForm.password"
+      [show]="registerForm.password().invalid() && registerForm.password().touched()"
+      errorId="signup-password-errors"
+      testId="signup-password-error-message"
+    />
   </div>
 
   <div>
@@ -105,22 +93,19 @@
     <input
       id="signup-password-repeat"
       [formField]="registerForm.confirmPassword"
+      aria-describedby="signup-password-confirm-errors"
       type="password"
       data-testid="signup-password-confirm-input"
       autocomplete="new-password"
       placeholder="Noch einmal dasselbe"
-      class="h-10 w-full rounded-[4px] border border-transparent bg-ink-650 px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-ink-300 focus:border-ink-400"
+      appInput
     />
-    @if (registerForm.confirmPassword().invalid() && registerForm.confirmPassword().touched()) {
-      @for (error of registerForm.confirmPassword().errors(); track error.kind) {
-        <div
-          class="mt-1 text-[13px] leading-[1.4] text-danger"
-          data-testid="signup-password-confirm-error-message"
-        >
-          {{ error.message }}
-        </div>
-      }
-    }
+    <app-field-errors
+      [field]="registerForm.confirmPassword"
+      [show]="registerForm.confirmPassword().invalid() && registerForm.confirmPassword().touched()"
+      errorId="signup-password-confirm-errors"
+      testId="signup-password-confirm-error-message"
+    />
   </div>
 
   <button

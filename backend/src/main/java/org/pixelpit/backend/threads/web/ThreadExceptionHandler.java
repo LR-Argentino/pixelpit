@@ -7,6 +7,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -25,11 +26,15 @@ public class ThreadExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleInvalidBody(MethodArgumentNotValidException e) {
+        return invalidInput(fieldErrors(e.getBindingResult().getFieldErrors()));
+    }
+
+    private static Map<String, List<String>> fieldErrors(List<FieldError> fieldErrors) {
         Map<String, List<String>> errors = new HashMap<>();
-        e.getBindingResult().getFieldErrors().forEach(fieldError -> errors
+        fieldErrors.forEach(fieldError -> errors
                 .computeIfAbsent(fieldName(fieldError.getField()), key -> new ArrayList<>())
                 .add(fieldError.getDefaultMessage()));
-        return invalidInput(errors);
+        return errors;
     }
 
     /** Gleiche Form wie ein Feldfehler, damit das Frontend alle Kategoriefehler am selben Feld zeigen kann. */
@@ -71,11 +76,21 @@ public class ThreadExceptionHandler {
         return THREAD_ID_PARAMETER.equals(e.getName()) ? invalidThreadId() : invalidPaging();
     }
 
+    /**
+     * Hat eine Methode Constraints an Pfad- oder Query-Parametern, prüft Spring auch den @Valid-Body
+     * per Methodenvalidierung; seine Feldfehler kommen dann hier statt in {@link #handleInvalidBody} an.
+     */
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ProblemDetail handleValidation(HandlerMethodValidationException e) {
         boolean threadIdInvalid = e.getParameterValidationResults().stream()
                 .anyMatch(result -> THREAD_ID_PARAMETER.equals(result.getMethodParameter().getParameterName()));
-        return threadIdInvalid ? invalidThreadId() : invalidPaging();
+        if (threadIdInvalid) {
+            return invalidThreadId();
+        }
+        List<FieldError> bodyErrors = e.getBeanResults().stream()
+                .flatMap(result -> result.getFieldErrors().stream())
+                .toList();
+        return bodyErrors.isEmpty() ? invalidPaging() : invalidInput(fieldErrors(bodyErrors));
     }
 
     /** Unbekannt und gelöscht ergeben dieselbe Antwort, damit sich nicht erkennen lässt, ob es einen Thread gab. */

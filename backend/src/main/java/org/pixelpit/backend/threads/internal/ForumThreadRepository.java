@@ -15,6 +15,9 @@ import java.util.Optional;
 
 public interface ForumThreadRepository extends PagingAndSortingRepository<ForumThread, Integer>, CrudRepository<ForumThread, Integer> {
 
+    /** Proxy ohne SELECT, z. B. als Thread eines neuen Posts; umgesetzt von SimpleJpaRepository. */
+    ForumThread getReferenceById(Integer id);
+
     /**
      * Einzige Stelle für die Regel „Thread ist sichtbar“, gilt für Liste und Detailansicht (Alias {@code t}).
      * Ein Thread ist gelöscht, wenn er selbst gelöscht ist oder sein Eröffnungspost (kleinste Post-ID).

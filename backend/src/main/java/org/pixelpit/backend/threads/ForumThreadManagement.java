@@ -3,7 +3,11 @@ package org.pixelpit.backend.threads;
 import lombok.RequiredArgsConstructor;
 import org.pixelpit.backend.profile.ProfileLookUp;
 import org.pixelpit.backend.threads.exceptions.ThreadNotFoundException;
+import org.pixelpit.backend.threads.exceptions.UnknownCategoryException;
 import org.pixelpit.backend.threads.internal.AttachmentRepository;
+import org.pixelpit.backend.threads.internal.Category;
+import org.pixelpit.backend.threads.internal.CategoryRepository;
+import org.pixelpit.backend.threads.internal.ForumThread;
 import org.pixelpit.backend.threads.internal.ForumThreadRepository;
 import org.pixelpit.backend.threads.internal.Post;
 import org.pixelpit.backend.threads.internal.PostRepository;
@@ -17,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
@@ -29,7 +34,32 @@ public class ForumThreadManagement {
     private final ForumThreadRepository forumThreadRepository;
     private final PostRepository postRepository;
     private final AttachmentRepository attachmentRepository;
+    private final CategoryRepository categoryRepository;
     private final ProfileLookUp profileLookUp;
+
+    /** Legt Thread, Eröffnungspost und Kategoriezuordnung gemeinsam an und liefert die ID des Threads. */
+    @Transactional
+    public int createThread(int accountId, String title, String content, Set<Integer> categoryIds) {
+        // Jeder Account hat ein Profil: Es entsteht synchron in derselben Transaktion wie der Account
+        Integer profileId = profileLookUp.findProfileIdByAccountId(accountId)
+                .orElseThrow(() -> new IllegalStateException("Kein Profil für Account " + accountId));
+        List<Category> categories = categoryRepository.findAllById(categoryIds);
+        if (categories.size() != categoryIds.size()) {
+            Set<Integer> unknown = new TreeSet<>(categoryIds);
+            categories.forEach(category -> unknown.remove(category.getId()));
+            throw new UnknownCategoryException(unknown);
+        }
+        ForumThread thread = forumThreadRepository.save(ForumThread.open(title, profileId, categories));
+        postRepository.save(Post.opening(thread, content, profileId));
+        return thread.getId();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CategoryView> listCategories() {
+        return categoryRepository.findAllByOrderByNameAsc().stream()
+                .map(category -> new CategoryView(category.getId(), category.getName()))
+                .toList();
+    }
 
     @Transactional(readOnly = true)
     public Page<ThreadSummary> listThreads(Pageable pageable) {

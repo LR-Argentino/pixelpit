@@ -23,6 +23,10 @@ public class ProfileLookUp {
         return profileRepository.findByAccountId(accountId).map(Profile::getUsername);
     }
 
+    public Optional<Integer> findProfileIdByAccountId(Integer accountId) {
+        return profileRepository.findByAccountId(accountId).map(Profile::getId);
+    }
+
     /** Benutzernamen zu mehreren Profil-IDs mit einer Abfrage; gelöschte Konten liefern "deleted-<id>". */
     public Map<Integer, String> findUsernamesByProfileIds(Collection<Integer> profileIds) {
         return profileRepository.findByIdIn(profileIds).stream()

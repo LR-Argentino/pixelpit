@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,4 +55,12 @@ public class ForumThread {
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
     private Set<Category> categories = new HashSet<>();
+
+    public static ForumThread open(String title, Integer createdBy, Collection<Category> categories) {
+        ForumThread thread = new ForumThread();
+        thread.title = title;
+        thread.createdBy = createdBy;
+        thread.categories.addAll(categories);
+        return thread;
+    }
 }

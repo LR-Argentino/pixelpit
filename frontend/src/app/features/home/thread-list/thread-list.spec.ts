@@ -11,7 +11,7 @@ function thread(id: number, title: string): Thread {
     id,
     title,
     createdAt: '2026-10-22T10:00:00Z',
-    category: { id: 3, name: 'Engines' },
+    categories: [{ id: 3, name: 'Engines' }],
     excerpt: null,
   };
 }

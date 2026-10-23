@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface ForumThreadRepository extends PagingAndSortingRepository<ForumThread, Integer> {
@@ -23,12 +25,14 @@ public interface ForumThreadRepository extends PagingAndSortingRepository<ForumT
                            and op.id = (select min(p2.id) from Post p2 where p2.thread = t))
             """;
 
-    /** Eine Abfrage pro Seite statt Entities pro Thread nachzuladen (kein N+1). */
+    /**
+     * Eine Abfrage pro Seite statt Entities pro Thread nachzuladen (kein N+1). Ohne Join auf die Kategorien,
+     * damit jeder Thread genau eine Zeile ergibt; die Kategorien kommen aus {@link #findCategoriesByThreadIdIn}.
+     */
     @Query(value = """
             select new org.pixelpit.backend.threads.ThreadSummary(
-                t.id, t.title, t.createdAt, c.id, c.name, substring(p.content, 1, 200))
+                t.id, t.title, t.createdAt, substring(p.content, 1, 200))
             from ForumThread t
-            left join t.categories c
             join Post p on p.thread = t and p.deletedAt is null
                 and p.id = (select min(p2.id) from Post p2 where p2.thread = t)
             where""" + VISIBLE + """
@@ -37,13 +41,31 @@ public interface ForumThreadRepository extends PagingAndSortingRepository<ForumT
             countQuery = "select count(t) from ForumThread t where" + VISIBLE)
     Page<ThreadSummary> findSummaries(Pageable pageable);
 
-    /** Kopf eines sichtbaren Threads; ein gelöschter Lösungspost ergibt solutionPostId = null. */
+    /**
+     * Kopf eines sichtbaren Threads; ein gelöschter Lösungspost ergibt solutionPostId = null. Ohne Join auf die
+     * Kategorien, sonst ergäbe ein Thread mit mehreren Kategorien mehrere Zeilen.
+     */
     @Query("""
             select new org.pixelpit.backend.threads.ThreadDetails(
-                t.id, t.title, t.createdAt, c.id, c.name, sp.id)
+                t.id, t.title, t.createdAt, sp.id, t.createdBy)
             from ForumThread t
-            left join t.categories c
             left join Post sp on sp.id = t.solutionPostId and sp.deletedAt is null
             where t.id = :id and""" + VISIBLE)
     Optional<ThreadDetails> findVisibleDetails(@Param("id") int id);
+
+    /** Kategorien aller übergebenen Threads mit einer Abfrage (kein N+1), alphabetisch nach Name. */
+    @Query("""
+            select t.id as threadId, c.id as id, c.name as name
+            from ForumThread t
+            join t.categories c
+            where t.id in :threadIds
+            order by c.name, c.id
+            """)
+    List<CategoryRow> findCategoriesByThreadIdIn(@Param("threadIds") Collection<Integer> threadIds);
+
+    interface CategoryRow {
+        Integer getThreadId();
+        Integer getId();
+        String getName();
+    }
 }

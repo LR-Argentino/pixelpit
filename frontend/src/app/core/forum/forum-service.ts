@@ -2,11 +2,13 @@ import { computed, Service, signal } from '@angular/core';
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Category } from './model/category';
 import { ForumStats } from './model/forum-stats';
+import { PostPage } from './model/post';
+import { ThreadDetails } from './model/thread-details';
 import { ThreadPage } from './model/thread-page';
 import { MOCK_CATEGORIES, MOCK_NEW_POSTS_THIS_WEEK } from './forum-mock-data';
 
 /**
- * Einzige Datenquelle für Forum-Inhalte. Threads kommen vom Backend,
+ * Einzige Datenquelle für Forum-Inhalte. Threads und Beiträge kommen vom Backend,
  * Kategorien und Statistiken sind vorerst noch MOCK-Daten.
  */
 @Service()
@@ -31,5 +33,29 @@ export class ForumService {
       url: '/api/threads',
       params: { page: page() - 1 },
     }));
+  }
+
+  /**
+   * Kopf eines Threads samt Lösungsbeitrag; bei id() === null wird nichts geladen.
+   * Muss in einem Injection Context aufgerufen werden.
+   */
+  public thread(id: () => number | null): HttpResourceRef<ThreadDetails | undefined> {
+    return httpResource<ThreadDetails>(() => {
+      const threadId = id();
+      return threadId === null ? undefined : `/api/threads/${threadId}`;
+    });
+  }
+
+  /**
+   * Beiträge eines Threads auf der angegebenen Seite (1-basiert); bei id() === null wird nichts geladen.
+   * Muss in einem Injection Context aufgerufen werden.
+   */
+  public posts(id: () => number | null, page: () => number): HttpResourceRef<PostPage | undefined> {
+    return httpResource<PostPage>(() => {
+      const threadId = id();
+      return threadId === null
+        ? undefined
+        : { url: `/api/threads/${threadId}/posts`, params: { page: page() - 1 } };
+    });
   }
 }

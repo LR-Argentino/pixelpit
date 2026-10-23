@@ -6,6 +6,13 @@ export const routes: Routes = [
     title: 'PixelPit',
     loadComponent: () => import('./features/home/home').then((m) => m.Home),
   },
+  // :id und ?seite= werden über withComponentInputBinding() an die gleichnamigen Inputs gebunden
+  {
+    path: 'threads/:id',
+    title: 'Thread – PixelPit',
+    loadComponent: () =>
+      import('./features/thread-detail/thread-detail').then((m) => m.ThreadDetail),
+  },
   // data.initialMode wird über withComponentInputBinding() an das gleichnamige Input der Auth-Komponente gebunden
   {
     path: 'anmelden',

@@ -71,11 +71,13 @@ class ThreadDetailIT {
     @ValueSource(strings = {"USER", "MODERATOR", "ADMIN"})
     void getThread_returnsSameContent_whenLoggedInWithAnyRole(String role) throws Exception {
         int threadId = createThread("Navmesh backt nicht", "Eröffnungspost", OPENED_AT);
+        markSolution(threadId, createPost(threadId, "Die Lösung", OPENED_AT.plusSeconds(3600)));
         String guestBody = getThread(threadId).getResponse().getContentAsString();
 
         MvcTestResult result = mvc.get().uri(THREAD_URL, threadId).with(user("blackbird").roles(role)).exchange();
 
         assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.author").isEqualTo("blackbird");
         assertThat(result).bodyJson().isStrictlyEqualTo(guestBody);
     }
 
@@ -86,6 +88,7 @@ class ThreadDetailIT {
         int threadId = createThread("Navmesh backt nicht", "Eröffnungspost", OPENED_AT);
         int answerId = createPost(threadId, "Die Lösung", OPENED_AT.plusSeconds(3600));
         markSolution(threadId, answerId);
+        int attachmentId = createAttachment(answerId, "log.txt", "text/plain", 512);
 
         MvcTestResult result = getThread(threadId);
 
@@ -93,9 +96,68 @@ class ThreadDetailIT {
         assertThat(result).bodyJson().extractingPath("$.id").isEqualTo(threadId);
         assertThat(result).bodyJson().extractingPath("$.title").isEqualTo("Navmesh backt nicht");
         assertThat(result).bodyJson().extractingPath("$.createdAt").isEqualTo("2026-09-22T10:00:00Z");
-        assertThat(result).bodyJson().extractingPath("$.category.id").isEqualTo(categoryId);
-        assertThat(result).bodyJson().extractingPath("$.category.name").isEqualTo("Engines");
+        assertThat(result).bodyJson().extractingPath("$.categories.length()").isEqualTo(1);
+        assertThat(result).bodyJson().extractingPath("$.categories[0].id").isEqualTo(categoryId);
+        assertThat(result).bodyJson().extractingPath("$.categories[0].name").isEqualTo("Engines");
+        assertThat(result).bodyJson().extractingPath("$.author").isEqualTo("blackbird");
+        assertThat(result).bodyJson().extractingPath("$").asMap().doesNotContainKey("authorId");
         assertThat(result).bodyJson().extractingPath("$.solutionPostId").isEqualTo(answerId);
+        assertThat(result).bodyJson().extractingPath("$.solution.id").isEqualTo(answerId);
+        assertThat(result).bodyJson().extractingPath("$.solution.author").isEqualTo("blackbird");
+        assertThat(result).bodyJson().extractingPath("$.solution.createdAt").isEqualTo("2026-09-22T11:00:00Z");
+        assertThat(result).bodyJson().extractingPath("$.solution.editedAt").isNull();
+        assertThat(result).bodyJson().extractingPath("$.solution.content").isEqualTo("Die Lösung");
+        assertThat(result).bodyJson().extractingPath("$.solution.solution").isEqualTo(true);
+        assertThat(result).bodyJson().extractingPath("$.solution.attachments.length()").isEqualTo(1);
+        assertThat(result).bodyJson().extractingPath("$.solution.attachments[0].id").isEqualTo(attachmentId);
+        assertThat(result).bodyJson().extractingPath("$.solution.attachments[0].fileName").isEqualTo("log.txt");
+    }
+
+    @Test
+    void getThread_returnsFullSolution_whenSolutionIsOnLaterPage() {
+        int threadId = createThreadWithReplies(24);
+        int solutionId = jdbcTemplate.queryForObject(
+                "SELECT id FROM posts WHERE thread_id = ? AND content = 'Antwort 22'", Integer.class, threadId);
+        markSolution(threadId, solutionId);
+
+        MvcTestResult result = getThread(threadId);
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.solution.id").isEqualTo(solutionId);
+        assertThat(result).bodyJson().extractingPath("$.solution.content").isEqualTo("Antwort 22");
+    }
+
+    @Test
+    void getThread_returnsAllCategories_whenThreadHasTwoCategories() {
+        int threadId = createThreadWithTwoCategories();
+
+        MvcTestResult result = getThread(threadId);
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.categories[*].name").asArray()
+                .containsExactly("Game Design", "Showcase");
+    }
+
+    @Test
+    void listPosts_returnsOk_whenThreadHasTwoCategories() {
+        int threadId = createThreadWithTwoCategories();
+
+        MvcTestResult result = listPosts(threadId);
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.content[*].content").asArray()
+                .containsExactly("Eröffnungspost");
+    }
+
+    @Test
+    void getThread_returnsAnonymizedAuthor_whenCreatorAccountIsDeleted() {
+        int threadId = createThread("Navmesh backt nicht", "Eröffnungspost", OPENED_AT);
+        anonymizeAccount(profileId);
+
+        MvcTestResult result = getThread(threadId);
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.author").isEqualTo("deleted-" + profileId);
     }
 
     @Test
@@ -106,6 +168,7 @@ class ThreadDetailIT {
 
         assertThat(result).hasStatusOk();
         assertThat(result).bodyJson().extractingPath("$.solutionPostId").isNull();
+        assertThat(result).bodyJson().extractingPath("$.solution").isNull();
     }
 
     @Test
@@ -119,6 +182,7 @@ class ThreadDetailIT {
 
         assertThat(result).hasStatusOk();
         assertThat(result).bodyJson().extractingPath("$.solutionPostId").isNull();
+        assertThat(result).bodyJson().extractingPath("$.solution").isNull();
     }
 
     // --- Thread-Kopf: nicht gefunden ------------------------------------------------------
@@ -475,6 +539,17 @@ class ThreadDetailIT {
         jdbcTemplate.update(
                 "INSERT INTO threads_categories (thread_id, category_id) VALUES (?, ?)", threadId, categoryId);
         createPost(threadId, openingPost, createdAt);
+        return threadId;
+    }
+
+    /** Thread, der statt "Engines" den Kategorien "Showcase" und "Game Design" zugeordnet ist. */
+    private int createThreadWithTwoCategories() {
+        int threadId = createThread("Mein Jump'n'Run", "Eröffnungspost", OPENED_AT);
+        jdbcTemplate.update("DELETE FROM threads_categories WHERE thread_id = ?", threadId);
+        for (String name : new String[] {"Showcase", "Game Design"}) {
+            jdbcTemplate.update("INSERT INTO threads_categories (thread_id, category_id) VALUES (?, ?)",
+                    threadId, createCategory(name));
+        }
         return threadId;
     }
 

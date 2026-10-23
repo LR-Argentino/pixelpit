@@ -13,7 +13,7 @@ function thread(overrides: Partial<Thread> = {}): Thread {
     id: 42,
     title: 'Navmesh backt nicht',
     createdAt: '2026-09-22T09:14:00',
-    category: { id: 3, name: 'Engines' },
+    categories: [{ id: 3, name: 'Engines' }],
     excerpt: 'Auszug',
     ...overrides,
   };
@@ -62,8 +62,22 @@ describe('ThreadRow', () => {
     expect(text(root, 'thread-row-created-text')).toBe('Erstellt am 22. Sept. 2026');
   });
 
+  it('sollte alle Kategorien in der gelieferten Reihenfolge zeigen', async () => {
+    const root = await render(
+      thread({
+        categories: [
+          { id: 12, name: 'Game Design' },
+          { id: 13, name: 'Showcase' },
+        ],
+      }),
+    );
+
+    const badges = Array.from(root.querySelectorAll('[data-testid="thread-row-category-text"]'));
+    expect(badges.map((badge) => badge.textContent?.trim())).toEqual(['Game Design', 'Showcase']);
+  });
+
   it('sollte kein Kategorie-Badge zeigen, wenn der Thread keine Kategorie hat', async () => {
-    const root = await render(thread({ category: null }));
+    const root = await render(thread({ categories: [] }));
 
     expect(exists(root, 'thread-row-category-text')).toBe(false);
   });

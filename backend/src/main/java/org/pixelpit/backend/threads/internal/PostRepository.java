@@ -6,7 +6,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface PostRepository extends PagingAndSortingRepository<Post, Integer> {
+
+    Optional<Post> findById(Integer id);
 
     /** Nicht gelöschte Posts eines Threads, ältester zuerst; die ID entscheidet bei gleichem Zeitpunkt. */
     @Query(value = """

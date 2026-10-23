@@ -40,4 +40,13 @@ public class Post {
 
     @Column(name = "deleted_by")
     private Integer deletedBy;
+
+    /** Der Eröffnungspost ist der erste Post eines Threads und trägt dessen Frage. */
+    public static Post opening(ForumThread thread, String content, Integer createdBy) {
+        Post post = new Post();
+        post.thread = thread;
+        post.content = content;
+        post.createdBy = createdBy;
+        return post;
+    }
 }

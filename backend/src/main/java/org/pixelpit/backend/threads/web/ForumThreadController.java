@@ -1,16 +1,24 @@
 package org.pixelpit.backend.threads.web;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
+import org.pixelpit.backend.auth.AccountDetails;
 import org.pixelpit.backend.threads.ForumThreadManagement;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PagedModel;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/threads")
@@ -24,6 +32,15 @@ public class ForumThreadController {
             @RequestParam(defaultValue = "20") @Positive int size) {
         return new PagedModel<>(forumThreadManagement.listThreads(PageRequest.of(page, size))
                 .map(ThreadSummaryResponse::from));
+    }
+
+    @PostMapping
+    public ResponseEntity<CreatedThreadResponse> createThread(
+            @Valid @RequestBody CreateThreadRequest request,
+            @AuthenticationPrincipal AccountDetails me) {
+        int id = forumThreadManagement.createThread(
+                me.getAccountId(), request.title(), request.content(), request.categoryIds());
+        return ResponseEntity.created(URI.create("/api/threads/" + id)).body(new CreatedThreadResponse(id));
     }
 
     @GetMapping("/{id}")

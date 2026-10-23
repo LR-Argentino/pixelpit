@@ -1,6 +1,6 @@
 import { ApplicationRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ForumService } from './forum-service';
 import { PostPage } from './model/post';
@@ -160,6 +160,44 @@ describe('ForumService', () => {
       TestBed.tick();
 
       http.expectNone(() => true);
+    });
+  });
+
+  describe('Thread erstellen', () => {
+    it('sollte die Kategorien mit ID vom Backend laden', async () => {
+      const categories = TestBed.runInInjectionContext(() => service.categoryOptions());
+      TestBed.tick();
+
+      http.expectOne('/api/categories').flush([
+        { id: 1, name: 'Engines' },
+        { id: 4, name: 'Off-Topic' },
+      ]);
+      await settle();
+
+      expect(categories.value()).toEqual([
+        { id: 1, name: 'Engines' },
+        { id: 4, name: 'Off-Topic' },
+      ]);
+    });
+
+    it('sollte den Thread per POST anlegen und die neue ID liefern', async () => {
+      const request = { title: 'Godot 4 Shader', content: 'Hilfe', categoryIds: [1, 2] };
+
+      const created = service.createThread(request);
+      const req = http.expectOne({ method: 'POST', url: '/api/threads' });
+      expect(req.request.body).toEqual(request);
+      req.flush({ id: 42 }, { status: 201, statusText: 'Created' });
+
+      await expect(created).resolves.toBe(42);
+    });
+
+    it('sollte mit dem HTTP-Fehler ablehnen, wenn das Backend mit 400 antwortet', async () => {
+      const created = service.createThread({ title: 'abc', content: '', categoryIds: [] });
+      http
+        .expectOne({ method: 'POST', url: '/api/threads' })
+        .flush({ title: 'Ungültige Eingabe' }, { status: 400, statusText: 'Bad Request' });
+
+      await expect(created).rejects.toBeInstanceOf(HttpErrorResponse);
     });
   });
 });

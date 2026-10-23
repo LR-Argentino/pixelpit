@@ -1,18 +1,23 @@
-import { computed, Service, signal } from '@angular/core';
-import { httpResource, HttpResourceRef } from '@angular/common/http';
+import { computed, inject, Service, signal } from '@angular/core';
+import { HttpClient, httpResource, HttpResourceRef } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { Category } from './model/category';
+import { CreateThreadRequest } from './model/create-thread-request';
 import { ForumStats } from './model/forum-stats';
 import { PostPage } from './model/post';
+import { ThreadCategory } from './model/thread';
 import { ThreadDetails } from './model/thread-details';
 import { ThreadPage } from './model/thread-page';
 import { MOCK_CATEGORIES, MOCK_NEW_POSTS_THIS_WEEK } from './forum-mock-data';
 
 /**
  * Einzige Datenquelle für Forum-Inhalte. Threads und Beiträge kommen vom Backend,
- * Kategorien und Statistiken sind vorerst noch MOCK-Daten.
+ * Kategorien (außer für Auswahllisten) und Statistiken sind vorerst noch MOCK-Daten.
  */
 @Service()
 export class ForumService {
+  private readonly http = inject(HttpClient);
+
   private readonly categoryList = signal<Category[]>(MOCK_CATEGORIES);
   public readonly categories = this.categoryList.asReadonly();
 
@@ -22,6 +27,22 @@ export class ForumService {
     threadCount: this.categoryList().reduce((sum, category) => sum + category.threadCount, 0),
     newPostsThisWeek: this.newPostsThisWeek(),
   }));
+
+  /**
+   * Echte Kategorien mit ID für Auswahllisten (im Gegensatz zum Mock in categories).
+   * Muss in einem Injection Context aufgerufen werden.
+   */
+  public categoryOptions(): HttpResourceRef<ThreadCategory[] | undefined> {
+    return httpResource<ThreadCategory[]>(() => '/api/categories');
+  }
+
+  /** Legt einen Thread samt Eröffnungsbeitrag an und liefert seine ID. */
+  public async createThread(request: CreateThreadRequest): Promise<number> {
+    const created = await firstValueFrom(
+      this.http.post<{ id: number }>('/api/threads', request),
+    );
+    return created.id;
+  }
 
   /**
    * Threads der angegebenen Seite (1-basiert); lädt neu, sobald sich die Seite ändert.

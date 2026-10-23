@@ -17,6 +17,7 @@ export class KontoErstellenPage {
   public readonly passwortErrorMessageText: Locator;
   public readonly passwortConfirmErrorMessageText: Locator;
   public readonly kontoErstellenButton: Locator;
+  public readonly kontoErstelltText: Locator;
 
   public constructor(private readonly page: Page) {
     this.benutzernameInputField = page.getByTestId('signup-username-input');
@@ -30,6 +31,7 @@ export class KontoErstellenPage {
       'signup-password-confirm-error-message',
     );
     this.kontoErstellenButton = page.getByTestId('signup-submit-button');
+    this.kontoErstelltText = page.getByTestId('signup-success-message');
   }
 
   public async oeffnen(): Promise<void> {

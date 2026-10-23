@@ -13,6 +13,7 @@ context: |
     - Dev-Server auf http://localhost:4200, `/api` wird per proxy.conf.json an das Backend weitergeleitet
     - Für E2E-Tests und Templates gelten die Regeln in frontend/CLAUDE.md
       (data-testid-Konvention, Page Objects, Szenarien, nichts mocken)
+    - Nutze Angular MCP & Angular Skills für die Frontend Implementierung
 
   backend/ – Spring Boot 4.1 mit Java 25, Spring Modulith, Maven Wrapper (`./mvnw`)
     - Fachmodule als Pakete unter org.pixelpit.backend: account, auth, profile

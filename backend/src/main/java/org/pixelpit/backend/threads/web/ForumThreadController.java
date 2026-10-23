@@ -8,6 +8,7 @@ import org.pixelpit.backend.auth.AccountDetails;
 import org.pixelpit.backend.threads.ForumThreadManagement;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PagedModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,5 +56,15 @@ public class ForumThreadController {
             @RequestParam(defaultValue = "20") @Positive int size) {
         return new PagedModel<>(forumThreadManagement.listPosts(id, PageRequest.of(page, size))
                 .map(PostResponse::from));
+    }
+
+    /** Kein Location-Header: Es gibt keine Ressource für einen einzelnen Post. */
+    @PostMapping("/{id}/posts")
+    public ResponseEntity<CreatedPostResponse> createPost(
+            @PathVariable @Positive int id,
+            @Valid @RequestBody CreatePostRequest request,
+            @AuthenticationPrincipal AccountDetails me) {
+        int postId = forumThreadManagement.createPost(me.getAccountId(), id, request.content());
+        return ResponseEntity.status(HttpStatus.CREATED).body(new CreatedPostResponse(postId));
     }
 }

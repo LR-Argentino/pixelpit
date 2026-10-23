@@ -54,6 +54,16 @@ public class ForumThreadManagement {
         return thread.getId();
     }
 
+    /** Hängt einen Post an einen sichtbaren Thread an und liefert die ID des Posts. */
+    @Transactional
+    public int createPost(int accountId, int threadId, String content) {
+        findVisibleThread(threadId);
+        Integer profileId = profileLookUp.findProfileIdByAccountId(accountId)
+                .orElseThrow(() -> new IllegalStateException("Kein Profil für Account " + accountId));
+        ForumThread thread = forumThreadRepository.getReferenceById(threadId);
+        return postRepository.save(Post.reply(thread, content, profileId)).getId();
+    }
+
     @Transactional(readOnly = true)
     public List<CategoryView> listCategories() {
         return categoryRepository.findAllByOrderByNameAsc().stream()

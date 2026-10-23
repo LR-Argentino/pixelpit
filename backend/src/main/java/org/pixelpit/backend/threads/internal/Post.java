@@ -49,4 +49,13 @@ public class Post {
         post.createdBy = createdBy;
         return post;
     }
+
+    /** Eine Antwort ist jeder weitere Post eines bestehenden Threads. */
+    public static Post reply(ForumThread thread, String content, Integer createdBy) {
+        Post post = new Post();
+        post.thread = thread;
+        post.content = content;
+        post.createdBy = createdBy;
+        return post;
+    }
 }

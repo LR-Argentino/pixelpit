@@ -3,6 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ForumService } from './forum-service';
+import { PostPage } from './model/post';
+import { ThreadDetails } from './model/thread-details';
 import { ThreadPage } from './model/thread-page';
 
 const PAGE: ThreadPage = {
@@ -11,7 +13,7 @@ const PAGE: ThreadPage = {
       id: 1,
       title: 'Navmesh backt nicht',
       createdAt: '2026-10-22T10:00:00Z',
-      category: { id: 3, name: 'Engines' },
+      categories: [{ id: 3, name: 'Engines' }],
       excerpt: 'Auszug',
     },
   ],
@@ -90,5 +92,74 @@ describe('ForumService', () => {
     await settle();
 
     expect(threads.error()).toBeDefined();
+  });
+
+  describe('Thread-Detail', () => {
+    const DETAILS: ThreadDetails = {
+      id: 7,
+      title: 'Navmesh backt nicht',
+      createdAt: '2026-10-22T10:00:00Z',
+      categories: [{ id: 3, name: 'Engines' }],
+      author: 'blackbird',
+      solutionPostId: null,
+      solution: null,
+    };
+    const POSTS: PostPage = {
+      content: [
+        {
+          id: 70,
+          author: 'blackbird',
+          createdAt: '2026-10-22T10:00:00Z',
+          editedAt: null,
+          content: 'Eröffnungspost',
+          solution: false,
+          attachments: [],
+        },
+      ],
+      page: { size: 20, number: 0, totalElements: 1, totalPages: 1 },
+    };
+
+    it('sollte den Thread-Kopf und Seite 1 der Beiträge als page=0 laden', async () => {
+      const thread = TestBed.runInInjectionContext(() => service.thread(() => 7));
+      const posts = TestBed.runInInjectionContext(() =>
+        service.posts(
+          () => 7,
+          () => 1,
+        ),
+      );
+      TestBed.tick();
+
+      http.expectOne('/api/threads/7').flush(DETAILS);
+      http.expectOne('/api/threads/7/posts?page=0').flush(POSTS);
+      await settle();
+
+      expect(thread.value()).toEqual(DETAILS);
+      expect(posts.value()).toEqual(POSTS);
+    });
+
+    it('sollte die Beiträge neu laden, wenn sich die Seite ändert', () => {
+      const page = signal(1);
+      TestBed.runInInjectionContext(() => service.posts(() => 7, page));
+      TestBed.tick();
+      http.expectOne('/api/threads/7/posts?page=0').flush(POSTS);
+
+      page.set(2);
+      TestBed.tick();
+
+      http.expectOne('/api/threads/7/posts?page=1');
+    });
+
+    it('sollte keine Anfrage senden, wenn die ID ungültig ist', () => {
+      TestBed.runInInjectionContext(() => service.thread(() => null));
+      TestBed.runInInjectionContext(() =>
+        service.posts(
+          () => null,
+          () => 1,
+        ),
+      );
+      TestBed.tick();
+
+      http.expectNone(() => true);
+    });
   });
 });

@@ -112,9 +112,53 @@ class ThreadListIT {
         assertThat(result).bodyJson().extractingPath("$.content[0].id").isEqualTo(threadId);
         assertThat(result).bodyJson().extractingPath("$.content[0].title").isEqualTo("Navmesh backt nicht");
         assertThat(result).bodyJson().extractingPath("$.content[0].createdAt").isEqualTo("2026-09-22T10:00:00Z");
-        assertThat(result).bodyJson().extractingPath("$.content[0].category.id").isEqualTo(categoryId);
-        assertThat(result).bodyJson().extractingPath("$.content[0].category.name").isEqualTo("Engines");
+        assertThat(result).bodyJson().extractingPath("$.content[0].categories.length()").isEqualTo(1);
+        assertThat(result).bodyJson().extractingPath("$.content[0].categories[0].id").isEqualTo(categoryId);
+        assertThat(result).bodyJson().extractingPath("$.content[0].categories[0].name").isEqualTo("Engines");
         assertThat(result).bodyJson().extractingPath("$.content[0].excerpt").isEqualTo("Eröffnungspost");
+    }
+
+    @Test
+    void listThreads_returnsThreadOnceWithAllCategories_whenThreadHasTwoCategories() {
+        int threadId = createThread("Mein Jump'n'Run", "Text", Instant.parse("2026-09-22T10:00:00Z"));
+        jdbcTemplate.update("DELETE FROM threads_categories WHERE thread_id = ?", threadId);
+        assignCategory(threadId, createCategory("Showcase"));
+        assignCategory(threadId, createCategory("Game Design"));
+
+        MvcTestResult result = listThreads();
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.content.length()").isEqualTo(1);
+        assertThat(result).bodyJson().extractingPath("$.content[0].categories[*].name").asArray()
+                .containsExactly("Game Design", "Showcase");
+        assertThat(result).bodyJson().extractingPath("$.page.totalElements").isEqualTo(1);
+    }
+
+    @Test
+    void listThreads_returnsDistinctThreadsPerPage_whenOneThreadHasTwoCategories() {
+        createThreads(3);
+        int newestId = jdbcTemplate.queryForObject(
+                "SELECT id FROM threads WHERE title = 'Thread 03'", Integer.class);
+        assignCategory(newestId, createCategory("Showcase"));
+
+        MvcTestResult result = mvc.get().uri(THREADS_URL).param("size", "2").exchange();
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.content[*].title").asArray()
+                .containsExactly("Thread 03", "Thread 02");
+        assertThat(result).bodyJson().extractingPath("$.page.totalElements").isEqualTo(3);
+        assertThat(result).bodyJson().extractingPath("$.page.totalPages").isEqualTo(2);
+    }
+
+    @Test
+    void listThreads_returnsEmptyCategories_whenThreadHasNoCategory() {
+        int threadId = createThread("Ohne Kategorie", "Text", Instant.parse("2026-09-22T10:00:00Z"));
+        jdbcTemplate.update("DELETE FROM threads_categories WHERE thread_id = ?", threadId);
+
+        MvcTestResult result = listThreads();
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.content[0].categories").asArray().isEmpty();
     }
 
     @Test
@@ -166,10 +210,23 @@ class ThreadListIT {
     }
 
     @Test
+    void listThreads_excludesThread_whenOpeningPostIsDeleted() {
+        createThread("Sichtbarer Thread", "Text", Instant.parse("2026-09-20T10:00:00Z"));
+        deleteOpeningPost(createThread("Thread ohne Frage", "Text", Instant.parse("2026-09-22T10:00:00Z")));
+
+        MvcTestResult result = listThreads();
+
+        assertThat(result).hasStatusOk();
+        assertThat(result).bodyJson().extractingPath("$.content.length()").isEqualTo(1);
+        assertThat(result).bodyJson().extractingPath("$.content[0].title").isEqualTo("Sichtbarer Thread");
+    }
+
+    @Test
     void listThreads_countsOnlyVisibleThreads_whenOneIsDeleted() {
         createThread("Erster Thread", "Text", Instant.parse("2026-09-20T10:00:00Z"));
         createThread("Zweiter Thread", "Text", Instant.parse("2026-09-21T10:00:00Z"));
         deleteThread(createThread("Gelöschter Thread", "Text", Instant.parse("2026-09-22T10:00:00Z")));
+        deleteOpeningPost(createThread("Thread ohne Frage", "Text", Instant.parse("2026-09-23T10:00:00Z")));
 
         assertThat(listThreads()).bodyJson().extractingPath("$.page.totalElements").isEqualTo(2);
     }
@@ -263,6 +320,11 @@ class ThreadListIT {
         return threadId;
     }
 
+    private void assignCategory(int threadId, int category) {
+        jdbcTemplate.update(
+                "INSERT INTO threads_categories (thread_id, category_id) VALUES (?, ?)", threadId, category);
+    }
+
     /** Legt "Thread 01" bis "Thread nn" an, jeweils einen Tag später als der vorige. */
     private void createThreads(int count) {
         Instant start = Instant.parse("2026-09-01T10:00:00Z");
@@ -282,6 +344,14 @@ class ThreadListIT {
 
     private void deleteThread(int threadId) {
         jdbcTemplate.update("UPDATE threads SET deleted_at = now(), deleted_by = ? WHERE id = ?", profileId, threadId);
+    }
+
+    /** Löscht den Eröffnungspost (Post mit der kleinsten ID) per Soft Delete. */
+    private void deleteOpeningPost(int threadId) {
+        jdbcTemplate.update("""
+                UPDATE posts SET deleted_at = now(), deleted_by = ?
+                WHERE id = (SELECT min(id) FROM posts WHERE thread_id = ?)
+                """, profileId, threadId);
     }
 
     private void createPost(int threadId, String content, Instant createdAt) {

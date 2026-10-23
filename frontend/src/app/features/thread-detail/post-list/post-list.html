@@ -1,0 +1,96 @@
+<section id="beitraege" aria-label="Beiträge" class="scroll-mt-6">
+  @let page = postPage();
+  @if (failed()) {
+    <div class="rounded-[3px] border border-ink-550 px-6 py-10 text-center">
+      <p class="m-0 text-base font-bold text-white" role="alert" data-testid="post-list-error-text">
+        Beiträge konnten nicht geladen werden
+      </p>
+      <div class="mt-5 flex justify-center">
+        <button
+          appButton
+          variant="secondary"
+          size="sm"
+          type="button"
+          (click)="retry.emit()"
+          data-testid="post-list-retry-button"
+        >
+          Erneut versuchen
+        </button>
+      </div>
+    </div>
+  } @else if (!page) {
+    <p
+      class="m-0 py-10 text-center text-[13px] text-ink-100"
+      role="status"
+      data-testid="post-list-loading-text"
+    >
+      Beiträge werden geladen …
+    </p>
+  } @else if (page.content.length === 0) {
+    <div class="rounded-[3px] border border-ink-550 px-6 py-10 text-center">
+      <p
+        class="mx-auto m-0 max-w-[360px] text-[13px] leading-normal text-ink-100"
+        data-testid="post-list-empty-text"
+      >
+        Auf dieser Seite gibt es keine Beiträge.
+      </p>
+      <div class="mt-5 flex justify-center">
+        <a
+          appButton
+          variant="secondary"
+          size="sm"
+          [routerLink]="['/threads', threadId()]"
+          fragment="beitraege"
+          data-testid="post-list-reset-link"
+        >
+          Zur ersten Seite
+        </a>
+      </div>
+    </div>
+  } @else {
+    <ol class="m-0 flex list-none flex-col gap-4 p-0">
+      <!-- Der Eröffnungsbeitrag ist laut Spec immer der erste Beitrag auf Seite 1 -->
+      @for (post of page.content; track post.id; let first = $first) {
+        <li data-testid="post-list-post-item">
+          <app-post-item
+            [post]="post"
+            [opening]="currentPage() === 1 && first"
+            [byThreadAuthor]="post.author === threadAuthor()"
+          />
+        </li>
+      }
+    </ol>
+
+    @if (hasPrevious() || hasNext()) {
+      <nav aria-label="Seiten der Beiträge" class="mt-6 flex justify-between gap-4">
+        @if (hasPrevious()) {
+          <a
+            appButton
+            variant="secondary"
+            size="sm"
+            [routerLink]="['/threads', threadId()]"
+            [queryParams]="{ seite: previousPage() }"
+            fragment="beitraege"
+            data-testid="post-list-previous-link"
+          >
+            Vorherige
+          </a>
+        }
+        @if (hasNext()) {
+          <a
+            appButton
+            variant="secondary"
+            size="sm"
+            class="ml-auto"
+            [routerLink]="['/threads', threadId()]"
+            [queryParams]="{ seite: nextPage() }"
+            fragment="beitraege"
+            data-testid="post-list-next-link"
+          >
+            Nächste
+          </a>
+        }
+      </nav>
+    }
+  }
+</section>

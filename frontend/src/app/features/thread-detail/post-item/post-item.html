@@ -1,0 +1,63 @@
+@let p = post();
+<div class="mb-4 flex flex-wrap items-center gap-2.5">
+  <app-avatar [name]="p.author" [size]="34" />
+  <div class="flex min-w-0 flex-wrap items-center gap-2">
+    <span class="text-[15px] font-bold text-white" data-testid="post-item-author-text">
+      {{ p.author }}
+    </span>
+    @if (opening()) {
+      <app-tag tone="neutral" data-testid="post-item-opening-text">Frage</app-tag>
+    }
+    @if (byThreadAuthor()) {
+      <app-tag tone="neutral" data-testid="post-item-thread-author-text">Thread-Autor</app-tag>
+    }
+    @if (p.solution) {
+      <app-tag tone="ok" data-testid="post-item-solution-text">Lösung</app-tag>
+    }
+  </div>
+  <span class="flex-1"></span>
+  <div class="flex items-center gap-2 text-[13px] leading-none text-ink-200">
+    @if (p.editedAt; as editedAt) {
+      <span
+        class="italic"
+        [title]="'Bearbeitet am ' + (editedAt | date: 'd. MMM y, HH:mm')"
+        data-testid="post-item-edited-text"
+      >
+        bearbeitet
+      </span>
+    }
+    <time [attr.datetime]="p.createdAt" data-testid="post-item-created-text">
+      {{ p.createdAt | date: 'd. MMM y, HH:mm' }}
+    </time>
+  </div>
+</div>
+
+<!-- Angular bereinigt das HTML beim Binden an innerHTML (keine Skripte, keine on*-Attribute) -->
+<div
+  class="post-markdown"
+  [innerHTML]="p.content | markdown"
+  data-testid="post-item-content-text"
+></div>
+
+@if (p.attachments.length > 0) {
+  <div class="mt-4">
+    <h4
+      class="m-0 mb-2 text-xs font-semibold tracking-wide text-ink-200 uppercase"
+      data-testid="post-item-attachments-heading"
+    >
+      Anhänge
+    </h4>
+    <ul class="m-0 flex list-none flex-col gap-1.5 p-0">
+      @for (attachment of p.attachments; track attachment.id) {
+        <li
+          class="flex flex-wrap items-baseline gap-x-2 text-[13px] text-ink-100"
+          data-testid="post-item-attachment-item"
+        >
+          <span class="font-semibold text-ink-050">{{ attachment.fileName }}</span>
+          <span>{{ attachment.mimeType }}</span>
+          <span>{{ attachment.fileSize | fileSize }}</span>
+        </li>
+      }
+    </ul>
+  </div>
+}

@@ -4,7 +4,8 @@ export interface Thread {
   title: string;
   /** ISO-8601 */
   createdAt: string;
-  category: ThreadCategory | null;
+  /** alphabetisch nach Name; leer, wenn der Thread keiner Kategorie zugeordnet ist */
+  categories: ThreadCategory[];
   /** null, wenn der Eröffnungspost gelöscht ist */
   excerpt: string | null;
 }

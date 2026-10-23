@@ -14,7 +14,7 @@ const PAGE: ThreadPage = {
       id: 7,
       title: 'Godot 4: Shader im Export',
       createdAt: '2026-10-22T10:00:00Z',
-      category: { id: 3, name: 'Engines' },
+      categories: [{ id: 3, name: 'Engines' }],
       excerpt: 'Auszug',
     },
   ],

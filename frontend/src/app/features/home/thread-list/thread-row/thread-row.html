@@ -1,7 +1,7 @@
 @let t = thread();
 <div class="min-w-0">
   <div class="mb-2 flex flex-wrap items-center gap-2.5">
-    @if (t.category; as category) {
+    @for (category of t.categories; track category.id) {
       <app-badge data-testid="thread-row-category-text">{{ category.name }}</app-badge>
     }
     <span class="text-[13px] leading-none text-ink-200" data-testid="thread-row-created-text">

@@ -1,0 +1,215 @@
+<div class="flex min-h-dvh bg-ink-850 font-archivo">
+  <app-sidebar />
+  <main class="min-w-0 flex-1 overflow-hidden">
+    <div class="mx-auto max-w-[820px] px-11 pt-10 pb-16">
+      <a
+        routerLink="/"
+        class="rounded-[2px] text-[13px] text-ink-100 focus-ring hover:text-white"
+        data-testid="new-thread-home-link"
+      >
+        ← Zur Übersicht
+      </a>
+
+      <h1 class="mt-6 mb-8 text-2xl font-bold text-white" data-testid="new-thread-heading">
+        Neuen Thread erstellen
+      </h1>
+
+      @if (authService.isAuthenticated()) {
+        <form class="flex flex-col gap-[22px]" (submit)="onSubmit($event)">
+          <div>
+            <label
+              for="new-thread-title"
+              class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-ink-100 uppercase"
+            >
+              Titel
+            </label>
+            <input
+              id="new-thread-title"
+              [formField]="threadForm.title"
+              type="text"
+              data-testid="new-thread-title-input"
+              placeholder="Worum geht es?"
+              class="h-10 w-full rounded-[4px] border border-transparent bg-[#1a1a1a] px-3 text-sm leading-[1.4] text-white transition-colors duration-[120ms] outline-none placeholder:text-[#6f726f] focus:border-[#3a3a3a]"
+            />
+            @if (threadForm.title().invalid() && threadForm.title().touched()) {
+              @for (error of threadForm.title().errors(); track error.kind) {
+                <div
+                  class="mt-1 text-[13px] leading-[1.4] text-red-500"
+                  data-testid="new-thread-title-error-message"
+                >
+                  {{ error.message }}
+                </div>
+              }
+            }
+          </div>
+
+          <div>
+            <label
+              for="new-thread-content"
+              class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-ink-100 uppercase"
+            >
+              Text
+            </label>
+            <textarea
+              id="new-thread-content"
+              [formField]="threadForm.content"
+              rows="10"
+              data-testid="new-thread-content-input"
+              aria-describedby="new-thread-content-hint"
+              placeholder="Beschreibe deine Frage so genau wie möglich."
+              class="w-full rounded-[4px] border border-transparent bg-[#1a1a1a] px-3 py-2.5 text-sm leading-[1.5] text-white transition-colors duration-[120ms] outline-none placeholder:text-[#6f726f] focus:border-[#3a3a3a]"
+            ></textarea>
+            @if (threadForm.content().invalid() && threadForm.content().touched()) {
+              @for (error of threadForm.content().errors(); track error.kind) {
+                <div
+                  class="mt-1 text-[13px] leading-[1.4] text-red-500"
+                  data-testid="new-thread-content-error-message"
+                >
+                  {{ error.message }}
+                </div>
+              }
+            }
+            <div
+              id="new-thread-content-hint"
+              class="mt-2 text-[13px] leading-[1.4] text-[#6f726f]"
+              data-testid="new-thread-content-hint"
+            >
+              Markdown wird unterstützt
+            </div>
+          </div>
+
+          <fieldset class="m-0 border-0 p-0">
+            <legend
+              class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-ink-100 uppercase"
+            >
+              Kategorien
+            </legend>
+            @if (categories.isLoading()) {
+              <div
+                role="status"
+                class="text-[13px] leading-[1.4] text-[#6f726f]"
+                data-testid="new-thread-categories-loading-text"
+              >
+                Kategorien werden geladen …
+              </div>
+            } @else if (categories.error()) {
+              <div class="flex flex-wrap items-center gap-3">
+                <span
+                  role="alert"
+                  class="text-[13px] leading-[1.4] text-red-500"
+                  data-testid="new-thread-categories-error-text"
+                >
+                  Kategorien konnten nicht geladen werden
+                </span>
+                <button
+                  appButton
+                  variant="secondary"
+                  size="sm"
+                  type="button"
+                  (click)="categories.reload()"
+                  data-testid="new-thread-categories-retry-button"
+                >
+                  Erneut versuchen
+                </button>
+              </div>
+            } @else if (categories.hasValue()) {
+              <div class="flex flex-wrap gap-x-5 gap-y-2">
+                @for (category of categories.value(); track category.id) {
+                  <label
+                    class="flex items-center gap-2 text-sm text-white has-disabled:cursor-not-allowed has-disabled:opacity-40"
+                  >
+                    <input
+                      type="checkbox"
+                      class="size-4 accent-white"
+                      [checked]="isSelected(category.id)"
+                      [disabled]="isLocked(category.id)"
+                      (change)="toggleCategory(category.id)"
+                      data-testid="new-thread-category-checkbox"
+                    />{{ category.name }}</label
+                  >
+                }
+              </div>
+              <div
+                class="mt-2 text-[13px] leading-[1.4] text-[#6f726f]"
+                data-testid="new-thread-categories-hint"
+              >
+                bis zu 2 Kategorien
+              </div>
+            }
+            @if (threadForm.categoryIds().invalid() && threadForm.categoryIds().touched()) {
+              @for (error of threadForm.categoryIds().errors(); track error.kind) {
+                <div
+                  class="mt-1 text-[13px] leading-[1.4] text-red-500"
+                  data-testid="new-thread-categories-error-message"
+                >
+                  {{ error.message }}
+                </div>
+              }
+            }
+          </fieldset>
+
+          <div class="flex items-center gap-3">
+            <button
+              appButton
+              type="submit"
+              data-testid="new-thread-submit-button"
+              [disabled]="
+                !categories.hasValue() || fieldsInvalid() || threadForm().submitting()
+              "
+            >
+              {{ threadForm().submitting() ? 'Wird erstellt …' : 'Thread erstellen' }}
+            </button>
+            <a
+              routerLink="/"
+              class="rounded-[2px] text-[13px] text-ink-100 focus-ring hover:text-white"
+              data-testid="new-thread-cancel-link"
+            >
+              Abbrechen
+            </a>
+          </div>
+          @for (error of threadForm().errors(); track error.kind) {
+            @if (error.kind === 'sessionExpired') {
+              <div role="alert" class="text-[13px] leading-[1.4] text-red-500">
+                <span data-testid="new-thread-session-expired-text">{{ error.message }}</span>
+                <a
+                  routerLink="/anmelden"
+                  class="ml-1 rounded-[2px] text-white underline focus-ring"
+                  data-testid="new-thread-login-link"
+                  >Zur Anmeldung</a
+                >
+              </div>
+            } @else {
+              <div
+                role="alert"
+                class="text-[13px] leading-[1.4] text-red-500"
+                data-testid="new-thread-error-message"
+              >
+                {{ error.message }}
+              </div>
+            }
+          }
+        </form>
+      } @else {
+        <div class="rounded-[3px] border border-dashed border-ink-500 px-6 py-10 text-center">
+          <p
+            class="m-0 text-[15px] leading-[1.4] text-ink-100"
+            data-testid="new-thread-guest-hint"
+          >
+            Neuen Thread erstellen — nur für angemeldete Mitglieder
+          </p>
+          <div class="mt-5 flex justify-center">
+            <a
+              appButton
+              variant="secondary"
+              size="sm"
+              routerLink="/anmelden"
+              data-testid="new-thread-guest-login-link"
+            >
+              Anmelden
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+  </main>
+</div>

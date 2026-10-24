@@ -44,6 +44,10 @@ public final class Account {
         this.role = role;
     }
 
+    public void changeRole(Role role) {
+        this.role = role;
+    }
+
     @PrePersist
     @PreUpdate
     private void normalizeEmail() {

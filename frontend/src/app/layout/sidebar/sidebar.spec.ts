@@ -105,6 +105,45 @@ describe('Sidebar', () => {
     expect(link?.getAttribute('href')).toBe('/profil');
   });
 
+  it('sollte Admins den Abschnitt „Administration“ mit dem Link „Benutzer“ zeigen', async () => {
+    const root = await render({
+      accountId: 1,
+      email: 'keller@pixelpit.dev',
+      username: 'm.keller',
+      role: 'ADMIN',
+      threadCount: 0,
+      postCount: 0,
+    });
+
+    expect(root.querySelector('[data-testid="sidebar-administration-heading"]')).not.toBeNull();
+    const link = root.querySelector('[data-testid="sidebar-administration-item"] a');
+    expect(link?.textContent?.trim()).toBe('Benutzer');
+    expect(link?.getAttribute('href')).toBe('/admin/benutzer');
+  });
+
+  it.each(['USER', 'MODERATOR'] as const)(
+    'sollte %s keinen Abschnitt „Administration“ zeigen',
+    async (role) => {
+      const root = await render({
+        accountId: 2,
+        email: 'vera@studio.dev',
+        username: 'voxelvera',
+        role,
+        threadCount: 0,
+        postCount: 0,
+      });
+
+      expect(root.querySelector('[data-testid="sidebar-administration-heading"]')).toBeNull();
+      expect(root.querySelector('[data-testid="sidebar-administration-item"]')).toBeNull();
+    },
+  );
+
+  it('sollte Gästen keinen Abschnitt „Administration“ zeigen', async () => {
+    const root = await render();
+
+    expect(root.querySelector('[data-testid="sidebar-administration-heading"]')).toBeNull();
+  });
+
   it('sollte Gästen keinen Profil-Link zeigen', async () => {
     const root = await render();
 

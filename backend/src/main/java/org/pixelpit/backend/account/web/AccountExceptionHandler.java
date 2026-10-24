@@ -1,7 +1,9 @@
 package org.pixelpit.backend.account.web;
 
+import org.pixelpit.backend.account.exceptions.AccountNotFoundException;
 import org.pixelpit.backend.account.exceptions.EmailAlreadyTakenException;
 import org.pixelpit.backend.account.exceptions.InvalidPasswordException;
+import org.pixelpit.backend.account.exceptions.OwnRoleChangeException;
 import org.pixelpit.backend.account.exceptions.PasswordMismatchException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -39,6 +41,22 @@ public class AccountExceptionHandler {
     public ProblemDetail handleInvalidPasswordException(InvalidPasswordException e) {
         ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
         problemDetail.setTitle("Passwort ist falsch");
+        problemDetail.setDetail(e.getMessage());
+        return problemDetail;
+    }
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ProblemDetail handleAccountNotFoundException(AccountNotFoundException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problemDetail.setTitle("Konto nicht gefunden");
+        problemDetail.setDetail(e.getMessage());
+        return problemDetail;
+    }
+
+    @ExceptionHandler(OwnRoleChangeException.class)
+    public ProblemDetail handleOwnRoleChangeException(OwnRoleChangeException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        problemDetail.setTitle("Die eigene Rolle kann nicht geändert werden");
         problemDetail.setDetail(e.getMessage());
         return problemDetail;
     }

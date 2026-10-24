@@ -32,4 +32,10 @@ public class ProfileLookUp {
         return profileRepository.findByIdIn(profileIds).stream()
                 .collect(Collectors.toMap(Profile::getId, Profile::getUsername));
     }
+
+    /** Benutzernamen zu mehreren Account-IDs mit einer Abfrage. */
+    public Map<Integer, String> findUsernamesByAccountIds(Collection<Integer> accountIds) {
+        return profileRepository.findByAccountIdIn(accountIds).stream()
+                .collect(Collectors.toMap(Profile::getAccountId, Profile::getUsername));
+    }
 }

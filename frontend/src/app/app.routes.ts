@@ -25,6 +25,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/thread-detail/thread-detail').then((m) => m.ThreadDetail),
       },
+      {
+        path: 'profil',
+        title: 'Mein Profil – PixelPit',
+        loadComponent: () => import('./features/profile/profile').then((m) => m.Profile),
+      },
     ],
   },
   // data.initialMode wird über withComponentInputBinding() an das gleichnamige Input der Auth-Komponente gebunden

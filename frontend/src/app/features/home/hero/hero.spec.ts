@@ -59,6 +59,8 @@ describe('Hero', () => {
       email: 'vera@studio.dev',
       username: 'voxelvera',
       role: 'USER',
+      threadCount: 0,
+      postCount: 0,
     });
 
     expect(byTestId(root, 'hero-register-link')).toBeNull();

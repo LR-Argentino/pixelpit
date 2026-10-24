@@ -107,6 +107,15 @@ public class ForumThreadManagement {
         return new PageImpl<>(toViews(posts.getContent(), thread.solutionPostId()), pageable, posts.getTotalElements());
     }
 
+    @Transactional(readOnly = true)
+    public ForumActivity countActivity(int accountId) {
+        Integer profileId = profileLookUp.findProfileIdByAccountId(accountId)
+                .orElseThrow(() -> new IllegalStateException("Kein Profil für Account " + accountId));
+        return new ForumActivity(
+                forumThreadRepository.countVisibleByCreatedBy(profileId),
+                postRepository.countVisibleByCreatedBy(profileId));
+    }
+
     private ThreadDetails findVisibleThread(int threadId) {
         return forumThreadRepository.findVisibleDetails(threadId)
                 .orElseThrow(() -> new ThreadNotFoundException(threadId));

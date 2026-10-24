@@ -2,6 +2,7 @@ package org.pixelpit.backend.auth;
 
 import lombok.RequiredArgsConstructor;
 import org.pixelpit.backend.account.Account;
+import org.pixelpit.backend.account.AccountDetails;
 import org.pixelpit.backend.auth.internal.ReadAccountRepository;
 import org.pixelpit.backend.profile.ProfileLookUp;
 import org.springframework.security.core.userdetails.UserDetails;

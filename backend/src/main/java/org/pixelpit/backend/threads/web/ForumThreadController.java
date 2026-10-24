@@ -11,9 +11,11 @@ import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,6 +51,25 @@ public class ForumThreadController {
         return ThreadDetailsResponse.from(forumThreadManagement.getThread(id));
     }
 
+    /** PUT statt PATCH: Titel, Kategorien und Text des Eröffnungsposts werden immer vollständig ersetzt. */
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updateThread(
+            @PathVariable @Positive int id,
+            @Valid @RequestBody UpdateThreadRequest request,
+            @AuthenticationPrincipal AccountDetails me) {
+        forumThreadManagement.updateThread(
+                me.getAccountId(), id, request.title(), request.content(), request.categoryIds());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteThread(
+            @PathVariable @Positive int id,
+            @AuthenticationPrincipal AccountDetails me) {
+        forumThreadManagement.deleteThread(me.getAccountId(), id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}/posts")
     public PagedModel<PostResponse> listPosts(
             @PathVariable @Positive int id,
@@ -66,5 +87,24 @@ public class ForumThreadController {
             @AuthenticationPrincipal AccountDetails me) {
         int postId = forumThreadManagement.createPost(me.getAccountId(), id, request.content());
         return ResponseEntity.status(HttpStatus.CREATED).body(new CreatedPostResponse(postId));
+    }
+
+    @PutMapping("/{id}/posts/{postId}")
+    public ResponseEntity<Void> updatePost(
+            @PathVariable @Positive int id,
+            @PathVariable @Positive int postId,
+            @Valid @RequestBody UpdatePostRequest request,
+            @AuthenticationPrincipal AccountDetails me) {
+        forumThreadManagement.updatePost(me.getAccountId(), id, postId, request.content());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}/posts/{postId}")
+    public ResponseEntity<Void> deletePost(
+            @PathVariable @Positive int id,
+            @PathVariable @Positive int postId,
+            @AuthenticationPrincipal AccountDetails me) {
+        forumThreadManagement.deletePost(me.getAccountId(), id, postId);
+        return ResponseEntity.noContent().build();
     }
 }

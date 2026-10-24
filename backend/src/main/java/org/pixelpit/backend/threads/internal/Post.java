@@ -58,4 +58,16 @@ public class Post {
         post.createdBy = createdBy;
         return post;
     }
+
+    /** Ersetzt den Text; updatedAt macht den Post für alle als bearbeitet erkennbar. */
+    public void edit(String content) {
+        this.content = content;
+        this.updatedAt = Instant.now();
+    }
+
+    /** Soft Delete; updatedAt bleibt, denn Löschen ist keine Bearbeitung. */
+    public void delete(int profileId) {
+        this.deletedAt = Instant.now();
+        this.deletedBy = profileId;
+    }
 }

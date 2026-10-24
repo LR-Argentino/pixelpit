@@ -31,7 +31,7 @@
         Markdown wird unterstützt
       </div>
     </div>
-    <div>
+    <div class="flex flex-wrap items-start justify-between gap-3">
       <button
         appButton
         type="submit"
@@ -40,6 +40,8 @@
       >
         {{ replyForm().submitting() ? 'Wird gesendet …' : 'Antworten' }}
       </button>
+      <!-- Platz für Aktionen der Seite, z. B. Bearbeiten und Löschen des Threads -->
+      <ng-content />
     </div>
     @for (error of replyForm().errors(); track error.kind) {
       @if (error.kind === 'sessionExpired') {

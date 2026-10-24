@@ -5,7 +5,10 @@ import { Button } from '../../../shared/ui/button/button';
 import { Pagination } from '../../../shared/ui/pagination/pagination';
 import { PostItem } from '../post-item/post-item';
 
-/** Beiträge eines Threads mit Laden, Fehler, Leerzustand und Blättern. Bekommt die geladene Seite, rechnet selbst nichts aus. */
+/**
+ * Beiträge eines Threads mit Laden, Fehler, Leerzustand und Blättern. Bekommt die geladene Seite, rechnet selbst
+ * nichts aus und reicht Änderungen an den Beiträgen an die Detailseite weiter.
+ */
 @Component({
   imports: [RouterLink, Button, Pagination, PostItem],
   selector: 'app-post-list',
@@ -22,6 +25,11 @@ export class PostList {
   readonly threadId = input.required<number>();
   /** Benutzername des Thread-Erstellers, um seine Beiträge zu markieren */
   readonly threadAuthor = input.required<string>();
+  /** Benutzername des angemeldeten Nutzers, um seine Antworten änderbar zu machen; null für Gäste */
+  readonly username = input<string | null>(null);
 
   readonly retry = output<void>();
+  readonly changed = output<number>();
+  readonly deleted = output<number>();
+  readonly conflict = output<void>();
 }

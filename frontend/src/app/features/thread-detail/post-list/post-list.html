@@ -52,11 +52,18 @@
       <!-- Der Eröffnungsbeitrag ist laut Spec immer der erste Beitrag auf Seite 1 -->
       @for (post of page.content; track post.id; let first = $first) {
         <!-- Sprungadresse hier statt im PostItem, das in der Lösungskarte ein zweites Mal erscheint -->
+        @let opening = currentPage() === 1 && first;
+        <!-- Den Eröffnungsbeitrag bearbeitet und löscht man über den Thread-Kopf, deshalb dort nie mine -->
         <li [id]="'beitrag-' + post.id" class="scroll-mt-6" data-testid="post-list-post-item">
           <app-post-item
             [post]="post"
-            [opening]="currentPage() === 1 && first"
+            [opening]="opening"
             [byThreadAuthor]="post.author === threadAuthor()"
+            [threadId]="threadId()"
+            [mine]="!opening && username() !== null && post.author === username()"
+            (changed)="changed.emit($event)"
+            (deleted)="deleted.emit($event)"
+            (conflict)="conflict.emit()"
           />
         </li>
       }

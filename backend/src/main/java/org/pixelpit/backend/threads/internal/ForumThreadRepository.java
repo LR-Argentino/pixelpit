@@ -4,6 +4,8 @@ import org.pixelpit.backend.threads.ThreadDetails;
 import org.pixelpit.backend.threads.ThreadSummary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.CrudRepository;
@@ -17,6 +19,15 @@ public interface ForumThreadRepository extends PagingAndSortingRepository<ForumT
 
     /** Proxy ohne SELECT, z. B. als Thread eines neuen Posts; umgesetzt von SimpleJpaRepository. */
     ForumThread getReferenceById(Integer id);
+
+    /**
+     * Sperrt die Thread-Zeile (SELECT ... FOR UPDATE) bis zum Ende der Transaktion. Alle Schreibpfade eines Threads
+     * (Antworten, Bearbeiten, Löschen) sperren zuerst hier, damit sie nacheinander laufen. Bewusst ohne
+     * {@link #VISIBLE}: Postgres erlaubt FOR UPDATE nicht zusammen mit Aggregaten wie min().
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select t from ForumThread t where t.id = :id")
+    Optional<ForumThread> findByIdForUpdate(@Param("id") int id);
 
     /**
      * Einzige Stelle für die Regel „Thread ist sichtbar“, gilt für Liste und Detailansicht (Alias {@code t}).

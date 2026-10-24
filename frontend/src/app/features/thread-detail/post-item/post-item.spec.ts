@@ -1,7 +1,10 @@
 import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeDe from '@angular/common/locales/de';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { Post } from '../../../core/forum/model/post';
 import { PostItem } from './post-item';
 
@@ -20,17 +23,43 @@ function post(overrides: Partial<Post> = {}): Post {
   };
 }
 
-async function render(value: Post, flags: { opening?: boolean; byThreadAuthor?: boolean } = {}) {
+interface Flags {
+  opening?: boolean;
+  byThreadAuthor?: boolean;
+  mine?: boolean;
+}
+
+async function renderFixture(value: Post, flags: Flags = {}) {
   TestBed.configureTestingModule({
     imports: [PostItem],
-    providers: [{ provide: LOCALE_ID, useValue: 'de' }],
+    providers: [
+      { provide: LOCALE_ID, useValue: 'de' },
+      provideRouter([]),
+      provideHttpClient(),
+      provideHttpClientTesting(),
+    ],
   });
   const fixture = TestBed.createComponent(PostItem);
   fixture.componentRef.setInput('post', value);
+  fixture.componentRef.setInput('threadId', 7);
   fixture.componentRef.setInput('opening', flags.opening ?? false);
   fixture.componentRef.setInput('byThreadAuthor', flags.byThreadAuthor ?? false);
+  fixture.componentRef.setInput('mine', flags.mine ?? false);
+  const events: unknown[] = [];
+  fixture.componentInstance.changed.subscribe((id) => events.push({ changed: id }));
+  fixture.componentInstance.deleted.subscribe((deleted) => events.push({ deleted }));
+  fixture.componentInstance.conflict.subscribe(() => events.push('conflict'));
   await fixture.whenStable();
-  return fixture.nativeElement as HTMLElement;
+  return {
+    fixture,
+    root: fixture.nativeElement as HTMLElement,
+    http: TestBed.inject(HttpTestingController),
+    events,
+  };
+}
+
+async function render(value: Post, flags: Flags = {}) {
+  return (await renderFixture(value, flags)).root;
 }
 
 const byTestId = (root: HTMLElement, testId: string) =>
@@ -161,5 +190,158 @@ describe('PostItem', () => {
     const root = await render(post());
 
     expect(byTestId(root, 'post-item-attachments-heading')).toBeNull();
+  });
+
+  describe('Bearbeiten und Löschen', () => {
+    const disabled = (root: HTMLElement, testId: string) =>
+      (byTestId(root, testId) as HTMLButtonElement).disabled;
+
+    async function click(fixture: ComponentFixture<PostItem>, root: HTMLElement, testId: string) {
+      byTestId(root, testId)!.click();
+      await fixture.whenStable();
+    }
+
+    /** Die Aktion wartet auf ein Promise, das whenStable() nicht kennt */
+    async function settle(fixture: ComponentFixture<PostItem>) {
+      await new Promise((resolve) => setTimeout(resolve));
+      await fixture.whenStable();
+    }
+
+    async function confirmDelete(flags: Flags = { mine: true }) {
+      const rendered = await renderFixture(post(), flags);
+      await click(rendered.fixture, rendered.root, 'post-item-delete-button');
+      await click(rendered.fixture, rendered.root, 'post-item-delete-confirm-button');
+      const request = rendered.http.expectOne({ method: 'DELETE', url: '/api/threads/7/posts/70' });
+      return { ...rendered, request };
+    }
+
+    describe('Autor sieht Bearbeiten und Löschen am Beitrag', () => {
+      it('sollte Bearbeiten und Löschen nutzbar zeigen, wenn der Beitrag vom angemeldeten Nutzer ist', async () => {
+        const root = await render(post(), { mine: true });
+
+        expect(disabled(root, 'post-item-edit-button')).toBe(false);
+        expect(disabled(root, 'post-item-delete-button')).toBe(false);
+      });
+
+      it('sollte keine Buttons zeigen, wenn der Beitrag von jemand anderem ist', async () => {
+        const root = await render(post());
+
+        expect(byTestId(root, 'post-item-edit-button')).toBeNull();
+        expect(byTestId(root, 'post-item-delete-button')).toBeNull();
+      });
+    });
+
+    describe('Beitrag wird an Ort und Stelle bearbeitet', () => {
+      it('sollte das Textfeld statt des Inhalts zeigen, wenn Bearbeiten gewählt wird', async () => {
+        const { fixture, root } = await renderFixture(post(), { mine: true });
+
+        await click(fixture, root, 'post-item-edit-button');
+
+        expect(byTestId(root, 'post-item-content-text')).toBeNull();
+        expect((byTestId(root, 'post-edit-form-content-input') as HTMLTextAreaElement).value).toBe(
+          'Navmesh backt nicht',
+        );
+      });
+
+      it('sollte wieder den Inhalt zeigen, wenn Abbrechen gewählt wird', async () => {
+        const { fixture, root } = await renderFixture(post(), { mine: true });
+
+        await click(fixture, root, 'post-item-edit-button');
+        await click(fixture, root, 'post-edit-form-cancel-button');
+
+        expect(text(root, 'post-item-content-text')).toBe('Navmesh backt nicht');
+      });
+
+      it('sollte die Änderung melden, wenn das Speichern gelingt', async () => {
+        const { fixture, root, http, events } = await renderFixture(post(), { mine: true });
+
+        await click(fixture, root, 'post-item-edit-button');
+        await click(fixture, root, 'post-edit-form-save-button');
+        http
+          .expectOne({ method: 'PUT', url: '/api/threads/7/posts/70' })
+          .flush(null, { status: 204, statusText: 'No Content' });
+        await settle(fixture);
+
+        expect(events).toEqual([{ changed: 70 }]);
+        expect(byTestId(root, 'post-edit-form-content-input')).toBeNull();
+      });
+    });
+
+    describe('Beitrag löschen mit Bestätigung', () => {
+      it('sollte nach einer Bestätigung fragen, wenn Löschen gewählt wird', async () => {
+        const { fixture, root } = await renderFixture(post(), { mine: true });
+
+        await click(fixture, root, 'post-item-delete-button');
+
+        expect(text(root, 'post-item-delete-confirm-text')).toBe(
+          'Diesen Beitrag wirklich löschen?',
+        );
+      });
+
+      it('sollte nichts senden und wieder die Buttons zeigen, wenn das Löschen abgebrochen wird', async () => {
+        const { fixture, root, http } = await renderFixture(post(), { mine: true });
+
+        await click(fixture, root, 'post-item-delete-button');
+        await click(fixture, root, 'post-item-delete-cancel-button');
+
+        expect(byTestId(root, 'post-item-delete-confirm-text')).toBeNull();
+        expect(byTestId(root, 'post-item-edit-button')).not.toBeNull();
+        http.verify();
+      });
+
+      it('sollte das Löschen melden, wenn das System mit 204 antwortet', async () => {
+        const { request, fixture, events } = await confirmDelete();
+
+        request.flush(null, { status: 204, statusText: 'No Content' });
+        await settle(fixture);
+
+        expect(events).toEqual([{ deleted: 70 }]);
+      });
+    });
+
+    describe('Fehler beim Löschen eines Beitrags werden angezeigt', () => {
+      it('sollte einen Konflikt melden, wenn inzwischen jemand geantwortet hat', async () => {
+        const { request, fixture, events } = await confirmDelete();
+
+        request.flush(null, { status: 409, statusText: 'Conflict' });
+        await settle(fixture);
+
+        expect(events).toEqual(['conflict']);
+      });
+
+      it('sollte auf die Anmeldung verweisen, wenn die Sitzung abgelaufen ist', async () => {
+        const { request, fixture, root } = await confirmDelete();
+
+        request.flush(null, { status: 401, statusText: 'Unauthorized' });
+        await settle(fixture);
+
+        expect(text(root, 'post-item-session-expired-text')).toBe(
+          'Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.',
+        );
+        expect(byTestId(root, 'post-item-login-link')?.getAttribute('href')).toBe('/anmelden');
+      });
+
+      it('sollte „Diesen Beitrag gibt es nicht mehr.“ zeigen, wenn das System mit 404 antwortet', async () => {
+        const { request, fixture, root } = await confirmDelete();
+
+        request.flush(null, { status: 404, statusText: 'Not Found' });
+        await settle(fixture);
+
+        expect(text(root, 'post-item-action-error-message')).toBe(
+          'Diesen Beitrag gibt es nicht mehr.',
+        );
+      });
+
+      it('sollte eine allgemeine Meldung zeigen, wenn ein unerwarteter Fehler auftritt', async () => {
+        const { request, fixture, root } = await confirmDelete();
+
+        request.flush(null, { status: 500, statusText: 'Server Error' });
+        await settle(fixture);
+
+        expect(text(root, 'post-item-action-error-message')).toBe(
+          'Änderung konnte nicht gespeichert werden. Bitte versuche es später erneut.',
+        );
+      });
+    });
   });
 });

@@ -8,6 +8,7 @@ import { PostPage } from './model/post';
 import { ThreadCategory } from './model/thread';
 import { ThreadDetails } from './model/thread-details';
 import { ThreadPage } from './model/thread-page';
+import { UpdateThreadRequest } from './model/update-thread-request';
 import { MOCK_CATEGORIES, MOCK_NEW_POSTS_THIS_WEEK } from './forum-mock-data';
 
 /**
@@ -91,5 +92,27 @@ export class ForumService {
       this.http.post<{ id: number }>(`/api/threads/${threadId}/posts`, { content }),
     );
     return created.id;
+  }
+
+  /** Ersetzt Titel, Kategorien und Text des Eröffnungsbeitrags eines eigenen Threads; 409, sobald jemand geantwortet hat. */
+  public async updateThread(threadId: number, request: UpdateThreadRequest): Promise<void> {
+    await firstValueFrom(this.http.put<void>(`/api/threads/${threadId}`, request));
+  }
+
+  /** Löscht einen eigenen Thread; 409, sobald jemand geantwortet hat. */
+  public async deleteThread(threadId: number): Promise<void> {
+    await firstValueFrom(this.http.delete<void>(`/api/threads/${threadId}`));
+  }
+
+  /** Ersetzt den Text eines eigenen Beitrags; beim Eröffnungsbeitrag 409, sobald jemand geantwortet hat. */
+  public async updatePost(threadId: number, postId: number, content: string): Promise<void> {
+    await firstValueFrom(
+      this.http.put<void>(`/api/threads/${threadId}/posts/${postId}`, { content }),
+    );
+  }
+
+  /** Löscht einen eigenen Beitrag; der Eröffnungsbeitrag löscht den ganzen Thread. */
+  public async deletePost(threadId: number, postId: number): Promise<void> {
+    await firstValueFrom(this.http.delete<void>(`/api/threads/${threadId}/posts/${postId}`));
   }
 }

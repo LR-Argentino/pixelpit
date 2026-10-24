@@ -231,4 +231,63 @@ describe('ForumService', () => {
       await expect(loaded).resolves.toEqual(POST_PAGE);
     });
   });
+
+  describe('Bearbeiten und Löschen', () => {
+    it('sollte Titel, Text und Kategorien per PUT senden, wenn ein Thread bearbeitet wird', async () => {
+      const updated = service.updateThread(7, {
+        title: 'Shader ruckelt',
+        content: 'Frage',
+        categoryIds: [2],
+      });
+      const req = http.expectOne({ method: 'PUT', url: '/api/threads/7' });
+      expect(req.request.body).toEqual({
+        title: 'Shader ruckelt',
+        content: 'Frage',
+        categoryIds: [2],
+      });
+      req.flush(null, { status: 204, statusText: 'No Content' });
+
+      await expect(updated).resolves.toBeUndefined();
+    });
+
+    it('sollte DELETE auf den Thread senden, wenn ein Thread gelöscht wird', async () => {
+      const deleted = service.deleteThread(7);
+      http
+        .expectOne({ method: 'DELETE', url: '/api/threads/7' })
+        .flush(null, { status: 204, statusText: 'No Content' });
+
+      await expect(deleted).resolves.toBeUndefined();
+    });
+
+    it('sollte den Text per PUT senden, wenn ein Beitrag bearbeitet wird', async () => {
+      const updated = service.updatePost(7, 46, 'Neuer Text');
+      const req = http.expectOne({ method: 'PUT', url: '/api/threads/7/posts/46' });
+      expect(req.request.body).toEqual({ content: 'Neuer Text' });
+      req.flush(null, { status: 204, statusText: 'No Content' });
+
+      await expect(updated).resolves.toBeUndefined();
+    });
+
+    it('sollte DELETE auf den Beitrag senden, wenn ein Beitrag gelöscht wird', async () => {
+      const deleted = service.deletePost(7, 46);
+      http
+        .expectOne({ method: 'DELETE', url: '/api/threads/7/posts/46' })
+        .flush(null, { status: 204, statusText: 'No Content' });
+
+      await expect(deleted).resolves.toBeUndefined();
+    });
+
+    it('sollte mit dem HTTP-Fehler ablehnen, wenn der Thread bereits Antworten hat', async () => {
+      const updated = service.updateThread(7, {
+        title: 'Shader ruckelt',
+        content: 'Frage',
+        categoryIds: [2],
+      });
+      http
+        .expectOne({ method: 'PUT', url: '/api/threads/7' })
+        .flush({ title: 'Thread hat bereits Antworten' }, { status: 409, statusText: 'Conflict' });
+
+      await expect(updated).rejects.toBeInstanceOf(HttpErrorResponse);
+    });
+  });
 });

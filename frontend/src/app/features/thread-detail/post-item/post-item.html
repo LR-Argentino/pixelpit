@@ -32,12 +32,22 @@
   </div>
 </div>
 
-<!-- Angular bereinigt das HTML beim Binden an innerHTML (keine Skripte, keine on*-Attribute) -->
-<div
-  class="post-markdown"
-  [innerHTML]="p.content | markdown"
-  data-testid="post-item-content-text"
-></div>
+@if (mode() === 'edit' && threadId(); as id) {
+  <app-post-edit-form
+    [threadId]="id"
+    [post]="p"
+    (saved)="onSaved()"
+    (cancelled)="mode.set('view')"
+    (conflict)="onConflict()"
+  />
+} @else {
+  <!-- Angular bereinigt das HTML beim Binden an innerHTML (keine Skripte, keine on*-Attribute) -->
+  <div
+    class="post-markdown"
+    [innerHTML]="p.content | markdown"
+    data-testid="post-item-content-text"
+  ></div>
+}
 
 @if (p.attachments.length > 0) {
   <div class="mt-4">
@@ -59,5 +69,76 @@
         </li>
       }
     </ul>
+  </div>
+}
+
+@if (showActions() && mode() !== 'edit') {
+  <div class="mt-4 border-t border-ink-550 pt-3">
+    @if (mode() === 'confirm-delete') {
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="text-[13px] text-white" data-testid="post-item-delete-confirm-text">
+          Diesen Beitrag wirklich löschen?
+        </span>
+        <button
+          appButton
+          variant="danger"
+          size="sm"
+          type="button"
+          [disabled]="deleting()"
+          (click)="deletePost()"
+          data-testid="post-item-delete-confirm-button"
+        >
+          Löschen
+        </button>
+        <button
+          appButton
+          variant="secondary"
+          size="sm"
+          type="button"
+          (click)="mode.set('view')"
+          data-testid="post-item-delete-cancel-button"
+        >
+          Abbrechen
+        </button>
+      </div>
+    } @else {
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          appButton
+          variant="ghost"
+          size="sm"
+          type="button"
+          (click)="startEditing()"
+          data-testid="post-item-edit-button"
+        >
+          Bearbeiten
+        </button>
+        <button
+          appButton
+          variant="danger"
+          size="sm"
+          type="button"
+          (click)="confirmDeleting()"
+          data-testid="post-item-delete-button"
+        >
+          Löschen
+        </button>
+      </div>
+    }
+    @if (actionError(); as error) {
+      <div role="alert" class="mt-2 text-[13px] leading-[1.4] text-danger">
+        @if (error.sessionExpired) {
+          <span data-testid="post-item-session-expired-text">{{ error.message }}</span>
+          <a
+            routerLink="/anmelden"
+            class="ml-1 rounded-[2px] text-white underline focus-ring"
+            data-testid="post-item-login-link"
+            >Zur Anmeldung</a
+          >
+        } @else {
+          <span data-testid="post-item-action-error-message">{{ error.message }}</span>
+        }
+      </div>
+    }
   </div>
 }

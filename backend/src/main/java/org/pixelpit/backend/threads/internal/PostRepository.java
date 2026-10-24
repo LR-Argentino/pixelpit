@@ -22,6 +22,18 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
             countQuery = "select count(p) from Post p where p.thread.id = :threadId and p.deletedAt is null")
     Page<Post> findVisibleByThreadId(@Param("threadId") int threadId, Pageable pageable);
 
+    /** ID des Eröffnungsposts, also des Posts mit der kleinsten ID (wie in VISIBLE), auch wenn er gelöscht ist. */
+    @Query("select min(p.id) from Post p where p.thread.id = :threadId")
+    Integer findOpeningPostId(@Param("threadId") int threadId);
+
+    /** Gibt es einen nicht gelöschten Post außer dem Eröffnungspost (kleinste Post-ID, wie in VISIBLE)? */
+    @Query("""
+            select count(p) > 0 from Post p
+            where p.thread.id = :threadId and p.deletedAt is null
+              and p.id > (select min(p2.id) from Post p2 where p2.thread.id = :threadId)
+            """)
+    boolean existsVisibleReply(@Param("threadId") int threadId);
+
     /** Anzahl nicht gelöschter Posts eines Profils in sichtbaren Threads, Eröffnungsposts eingeschlossen. */
     @Query("""
             select count(p) from Post p

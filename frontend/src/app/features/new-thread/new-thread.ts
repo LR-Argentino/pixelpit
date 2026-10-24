@@ -8,8 +8,7 @@ import { codePointLength, requiredTrimmed } from '../../shared/forms/validators'
 import { Button } from '../../shared/ui/button/button';
 import { Input } from '../../shared/ui/input/input';
 import { FieldErrors } from '../../shared/ui/field-errors/field-errors';
-
-const MAX_CATEGORIES = 2;
+import { CategoryPicker } from '../../shared/ui/category-picker/category-picker';
 
 interface NewThreadForm {
   title: string;
@@ -23,7 +22,7 @@ function emptyNewThread(): NewThreadForm {
 
 /** Formular für einen neuen Thread; Gäste sehen stattdessen einen Hinweis zur Anmeldung. */
 @Component({
-  imports: [RouterLink, FormField, Button, Input, FieldErrors],
+  imports: [RouterLink, FormField, Button, Input, FieldErrors, CategoryPicker],
   selector: 'app-new-thread',
   styleUrl: './new-thread.css',
   templateUrl: './new-thread.html',
@@ -57,28 +56,6 @@ export class NewThread {
       this.threadForm.content().invalid() ||
       this.threadForm.categoryIds().invalid(),
   );
-
-  protected readonly selectedCount = computed(() => this.model().categoryIds.length);
-
-  protected isSelected(id: number): boolean {
-    return this.model().categoryIds.includes(id);
-  }
-
-  /** Höchstzahl über die Sperre: ab zwei gewählten Kategorien sind die übrigen nicht wählbar */
-  protected isLocked(id: number): boolean {
-    return !this.isSelected(id) && this.selectedCount() >= MAX_CATEGORIES;
-  }
-
-  // Checkboxen hängen nicht per [formField] am Array, deshalb Modell und touched von Hand pflegen
-  protected toggleCategory(id: number): void {
-    this.model.update((value) => ({
-      ...value,
-      categoryIds: value.categoryIds.includes(id)
-        ? value.categoryIds.filter((selected) => selected !== id)
-        : [...value.categoryIds, id],
-    }));
-    this.threadForm.categoryIds().markAsTouched();
-  }
 
   protected onSubmit(event: Event): void {
     event.preventDefault();

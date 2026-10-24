@@ -1,5 +1,8 @@
 package org.pixelpit.backend.threads.web;
 
+import org.pixelpit.backend.threads.exceptions.NotContentOwnerException;
+import org.pixelpit.backend.threads.exceptions.PostNotFoundException;
+import org.pixelpit.backend.threads.exceptions.ThreadHasRepliesException;
 import org.pixelpit.backend.threads.exceptions.ThreadNotFoundException;
 import org.pixelpit.backend.threads.exceptions.UnknownCategoryException;
 import org.springframework.core.Ordered;
@@ -68,12 +71,17 @@ public class ThreadExceptionHandler {
         return problemDetail;
     }
 
-    /** Muss dem Namen des Pfad-Parameters in {@link ForumThreadController} entsprechen. */
+    /** Müssen den Namen der Pfad-Parameter in {@link ForumThreadController} entsprechen. */
     private static final String THREAD_ID_PARAMETER = "id";
+    private static final String POST_ID_PARAMETER = "postId";
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException e) {
-        return THREAD_ID_PARAMETER.equals(e.getName()) ? invalidThreadId() : invalidPaging();
+        return switch (e.getName()) {
+            case THREAD_ID_PARAMETER -> invalidThreadId();
+            case POST_ID_PARAMETER -> invalidPostId();
+            default -> invalidPaging();
+        };
     }
 
     /**
@@ -86,6 +94,11 @@ public class ThreadExceptionHandler {
                 .anyMatch(result -> THREAD_ID_PARAMETER.equals(result.getMethodParameter().getParameterName()));
         if (threadIdInvalid) {
             return invalidThreadId();
+        }
+        boolean postIdInvalid = e.getParameterValidationResults().stream()
+                .anyMatch(result -> POST_ID_PARAMETER.equals(result.getMethodParameter().getParameterName()));
+        if (postIdInvalid) {
+            return invalidPostId();
         }
         List<FieldError> bodyErrors = e.getBeanResults().stream()
                 .flatMap(result -> result.getFieldErrors().stream())
@@ -102,10 +115,42 @@ public class ThreadExceptionHandler {
         return problemDetail;
     }
 
+    /** Unbekannt, gelöscht oder in einem anderen Thread ergeben dieselbe Antwort. */
+    @ExceptionHandler(PostNotFoundException.class)
+    public ProblemDetail handlePostNotFound() {
+        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problemDetail.setTitle("Beitrag nicht gefunden");
+        problemDetail.setDetail("Diesen Beitrag gibt es nicht.");
+        return problemDetail;
+    }
+
+    @ExceptionHandler(NotContentOwnerException.class)
+    public ProblemDetail handleNotContentOwner() {
+        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
+        problemDetail.setTitle("Keine Berechtigung");
+        problemDetail.setDetail("Nur der Ersteller darf diesen Inhalt bearbeiten oder löschen.");
+        return problemDetail;
+    }
+
+    @ExceptionHandler(ThreadHasRepliesException.class)
+    public ProblemDetail handleThreadHasReplies() {
+        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        problemDetail.setTitle("Thread hat bereits Antworten");
+        problemDetail.setDetail("Nicht mehr änderbar, weil bereits jemand geantwortet hat.");
+        return problemDetail;
+    }
+
     private ProblemDetail invalidThreadId() {
         ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         problemDetail.setTitle("Ungültige Thread-ID");
         problemDetail.setDetail("Die Thread-ID muss eine positive ganze Zahl sein.");
+        return problemDetail;
+    }
+
+    private ProblemDetail invalidPostId() {
+        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problemDetail.setTitle("Ungültige Beitrags-ID");
+        problemDetail.setDetail("Die Beitrags-ID muss eine positive ganze Zahl sein.");
         return problemDetail;
     }
 

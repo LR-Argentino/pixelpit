@@ -101,7 +101,10 @@ async function open(url: string, extraProviders: Provider[] = []) {
   TestBed.configureTestingModule({
     providers: [
       provideRouter(
-        [{ path: 'threads/:id', component: ThreadDetail }],
+        [
+          { path: '', children: [] },
+          { path: 'threads/:id', component: ThreadDetail },
+        ],
         withComponentInputBinding(),
       ),
       provideHttpClient(),
@@ -117,6 +120,30 @@ async function open(url: string, extraProviders: Provider[] = []) {
     http: TestBed.inject(HttpTestingController),
     router: TestBed.inject(Router),
   };
+}
+
+/** submit() und die Navigation warten auf Promises, die whenStable() nicht kennt */
+async function settle(harness: RouterTestingHarness) {
+  await new Promise((resolve) => setTimeout(resolve));
+  await harness.fixture.whenStable();
+}
+
+/**
+ * Wartet, bis die Seite die Anfrage gestellt hat. whenStable() ginge nicht: Eine offene
+ * httpResource-Anfrage hält die App instabil, solange der Test sie nicht beantwortet.
+ */
+async function nextRequest(
+  http: HttpTestingController,
+  match: string | { method: string; url: string },
+) {
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const [request] = http.match(match);
+    if (request) {
+      return request;
+    }
+    await new Promise((resolve) => setTimeout(resolve));
+  }
+  return http.expectOne(match);
 }
 
 describe('ThreadDetail', () => {
@@ -431,27 +458,6 @@ describe('ThreadDetail', () => {
       Element.prototype.scrollIntoView = vi.fn();
     });
 
-    /** submit() und die Navigation warten auf Promises, die whenStable() nicht kennt */
-    async function settle(harness: RouterTestingHarness) {
-      await new Promise((resolve) => setTimeout(resolve));
-      await harness.fixture.whenStable();
-    }
-
-    /**
-     * Wartet, bis die Seite die Anfrage gestellt hat. whenStable() ginge nicht: Eine offene
-     * httpResource-Anfrage hält die App instabil, solange der Test sie nicht beantwortet.
-     */
-    async function nextRequest(http: HttpTestingController, url: string) {
-      for (let attempt = 0; attempt < 50; attempt++) {
-        const [request] = http.match(url);
-        if (request) {
-          return request;
-        }
-        await new Promise((resolve) => setTimeout(resolve));
-      }
-      return http.expectOne(url);
-    }
-
     async function reply(root: HTMLElement, harness: RouterTestingHarness, content: string) {
       const field = element(root, 'reply-form-content-input') as HTMLTextAreaElement;
       field.value = content;
@@ -575,6 +581,379 @@ describe('ThreadDetail', () => {
       expect(router.url).toBe('/threads/7#beitrag-72');
       expect(contents(root)).toEqual(['Eröffnungspost', 'Erste Antwort', 'Danke!']);
       expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+    });
+  });
+
+  describe('Thread bearbeiten und löschen', () => {
+    const OWN: ThreadDetails = { ...DETAILS, author: 'lena' };
+    /** Nur der Eröffnungsbeitrag: Der Thread ist noch änderbar */
+    const ONLY_OPENING: PostPage = {
+      content: [post(70, 'Eröffnungspost', false, 'lena')],
+      page: { size: 20, number: 0, totalElements: 1, totalPages: 1 },
+    };
+    const ANSWERED: PostPage = {
+      content: [post(70, 'Eröffnungspost', false, 'lena'), post(71, 'Erste Antwort')],
+      page: { size: 20, number: 0, totalElements: 2, totalPages: 1 },
+    };
+    const CATEGORIES = [
+      { id: 2, name: 'Game Design' },
+      { id: 3, name: 'Engines' },
+    ];
+
+    beforeEach(() => {
+      Element.prototype.scrollIntoView = vi.fn();
+    });
+
+    async function openOwn(posts: PostPage = ONLY_OPENING) {
+      const opened = await open('/threads/7', [signedIn('USER')]);
+      opened.http.expectOne('/api/threads/7').flush(OWN);
+      opened.http.expectOne('/api/threads/7/posts?page=0').flush(posts);
+      await opened.harness.fixture.whenStable();
+      return opened;
+    }
+
+    /** Nicht whenStable(): Eine offene httpResource-Anfrage (z. B. Kategorien) hielte die App instabil */
+    async function click(harness: RouterTestingHarness, root: HTMLElement, testId: string) {
+      element(root, testId)!.click();
+      harness.detectChanges();
+      await new Promise((resolve) => setTimeout(resolve));
+      harness.detectChanges();
+    }
+
+    const disabled = (root: HTMLElement, testId: string) =>
+      (element(root, testId) as HTMLButtonElement).disabled;
+
+    describe('Ersteller sieht Bearbeiten und Löschen im Thread-Kopf', () => {
+      it('sollte Bearbeiten und Löschen nutzbar zeigen, wenn der Ersteller seinen Thread ohne Antworten öffnet', async () => {
+        const { root } = await openOwn();
+
+        expect(disabled(root, 'thread-detail-edit-button')).toBe(false);
+        expect(disabled(root, 'thread-detail-delete-button')).toBe(false);
+      });
+
+      it('sollte Bearbeiten und Löschen neben „Antworten“ zeigen, nicht im Thread-Kopf', async () => {
+        const { root } = await openOwn();
+
+        expect(root.querySelector('header [data-testid="thread-detail-edit-button"]')).toBeNull();
+        expect(
+          root.querySelector('app-reply-form [data-testid="thread-detail-edit-button"]'),
+        ).not.toBeNull();
+        expect(
+          root.querySelector('app-reply-form [data-testid="thread-detail-delete-button"]'),
+        ).not.toBeNull();
+      });
+
+      it('sollte keine Buttons zeigen, wenn ein Gast den Thread öffnet', async () => {
+        const { fixture, root, http } = render('7');
+
+        http.expectOne('/api/threads/7').flush(OWN);
+        http.expectOne('/api/threads/7/posts?page=0').flush(ONLY_OPENING);
+        await fixture.whenStable();
+
+        expect(element(root, 'thread-detail-edit-button')).toBeNull();
+        expect(element(root, 'thread-detail-delete-button')).toBeNull();
+      });
+
+      it.each<Role>(['USER', 'MODERATOR', 'ADMIN'])(
+        'sollte keine Buttons zeigen, wenn ein anderer %s den Thread öffnet',
+        async (role) => {
+          const { fixture, root, http } = render('7', undefined, [signedIn(role)]);
+
+          http.expectOne('/api/threads/7').flush(DETAILS);
+          http.expectOne('/api/threads/7/posts?page=0').flush(ONLY_OPENING);
+          await fixture.whenStable();
+
+          expect(element(root, 'thread-detail-edit-button')).toBeNull();
+          expect(element(root, 'thread-detail-delete-button')).toBeNull();
+        },
+      );
+    });
+
+    describe('Gesperrter Thread zeigt einen Hinweis', () => {
+      it('sollte die Buttons sperren und den Hinweis zeigen, wenn bereits jemand geantwortet hat', async () => {
+        const { root } = await openOwn(ANSWERED);
+
+        expect(disabled(root, 'thread-detail-edit-button')).toBe(true);
+        expect(disabled(root, 'thread-detail-delete-button')).toBe(true);
+        expect(text(root, 'thread-detail-locked-hint')).toBe(
+          'Nicht mehr änderbar, weil bereits jemand geantwortet hat.',
+        );
+      });
+
+      it('sollte keinen Hinweis zeigen, wenn niemand geantwortet hat', async () => {
+        const { root } = await openOwn();
+
+        expect(element(root, 'thread-detail-locked-hint')).toBeNull();
+      });
+    });
+
+    describe('Thread-Kopf wird an Ort und Stelle bearbeitet', () => {
+      it('sollte das Formular statt des Titels zeigen, wenn Bearbeiten gewählt wird', async () => {
+        const { harness, root, http } = await openOwn();
+
+        await click(harness, root, 'thread-detail-edit-button');
+        (await nextRequest(http, '/api/categories')).flush(CATEGORIES);
+        await harness.fixture.whenStable();
+
+        expect(element(root, 'thread-detail-title-heading')).toBeNull();
+        expect((element(root, 'thread-edit-form-title-input') as HTMLInputElement).value).toBe(
+          'Navmesh backt nicht',
+        );
+        expect((element(root, 'thread-edit-form-content-input') as HTMLTextAreaElement).value).toBe(
+          'Eröffnungspost',
+        );
+      });
+
+      it('sollte wieder den Titel zeigen, wenn Abbrechen gewählt wird', async () => {
+        const { harness, root, http } = await openOwn();
+        await click(harness, root, 'thread-detail-edit-button');
+        (await nextRequest(http, '/api/categories')).flush(CATEGORIES);
+        await harness.fixture.whenStable();
+
+        await click(harness, root, 'thread-edit-form-cancel-button');
+
+        expect(text(root, 'thread-detail-title-heading')).toBe('Navmesh backt nicht');
+        expect(element(root, 'thread-edit-form-title-input')).toBeNull();
+      });
+
+      it('sollte den Kopf neu laden und den neuen Titel zeigen, wenn das Speichern gelingt', async () => {
+        const { harness, root, http } = await openOwn();
+        await click(harness, root, 'thread-detail-edit-button');
+        (await nextRequest(http, '/api/categories')).flush(CATEGORIES);
+        await harness.fixture.whenStable();
+
+        const field = element(root, 'thread-edit-form-title-input') as HTMLInputElement;
+        field.value = 'Navmesh backt nicht mehr';
+        field.dispatchEvent(new Event('input'));
+        await click(harness, root, 'thread-edit-form-save-button');
+        (await nextRequest(http, { method: 'PUT', url: '/api/threads/7' })).flush(null, {
+          status: 204,
+          statusText: 'No Content',
+        });
+        (await nextRequest(http, '/api/threads/7')).flush({
+          ...OWN,
+          title: 'Navmesh backt nicht mehr',
+        });
+        (await nextRequest(http, '/api/threads/7/posts?page=0')).flush(ONLY_OPENING);
+        await settle(harness);
+
+        expect(text(root, 'thread-detail-title-heading')).toBe('Navmesh backt nicht mehr');
+        expect(element(root, 'thread-edit-form-title-input')).toBeNull();
+      });
+
+      it('sollte Thread und Beiträge neu laden und den Hinweis zeigen, wenn inzwischen jemand geantwortet hat', async () => {
+        const { harness, root, http } = await openOwn();
+        await click(harness, root, 'thread-detail-edit-button');
+        (await nextRequest(http, '/api/categories')).flush(CATEGORIES);
+        await harness.fixture.whenStable();
+
+        await click(harness, root, 'thread-edit-form-save-button');
+        (await nextRequest(http, { method: 'PUT', url: '/api/threads/7' })).flush(
+          { title: 'Thread hat bereits Antworten' },
+          { status: 409, statusText: 'Conflict' },
+        );
+        (await nextRequest(http, '/api/threads/7')).flush(OWN);
+        (await nextRequest(http, '/api/threads/7/posts?page=0')).flush(ANSWERED);
+        await settle(harness);
+
+        expect(contents(root)).toEqual(['Eröffnungspost', 'Erste Antwort']);
+        expect(element(root, 'thread-detail-locked-hint')).not.toBeNull();
+        expect(element(root, 'thread-edit-form-title-input')).toBeNull();
+      });
+    });
+
+    describe('Thread löschen mit Bestätigung', () => {
+      it('sollte zur Startseite wechseln, wenn das Löschen bestätigt wird', async () => {
+        const { harness, root, http, router } = await openOwn();
+
+        await click(harness, root, 'thread-detail-delete-button');
+        expect(text(root, 'thread-detail-delete-confirm-text')).toBe(
+          'Diesen Thread wirklich löschen?',
+        );
+        await click(harness, root, 'thread-detail-delete-confirm-button');
+        (await nextRequest(http, { method: 'DELETE', url: '/api/threads/7' })).flush(null, {
+          status: 204,
+          statusText: 'No Content',
+        });
+        await settle(harness);
+
+        expect(router.url).toBe('/');
+      });
+
+      it('sollte nichts senden und wieder die Buttons zeigen, wenn das Löschen abgebrochen wird', async () => {
+        const { harness, root } = await openOwn();
+
+        await click(harness, root, 'thread-detail-delete-button');
+        await click(harness, root, 'thread-detail-delete-cancel-button');
+
+        expect(element(root, 'thread-detail-delete-confirm-text')).toBeNull();
+        expect(element(root, 'thread-detail-edit-button')).not.toBeNull();
+      });
+    });
+
+    describe('Fehler beim Löschen des Threads werden angezeigt', () => {
+      async function deleteWith(status: number) {
+        const opened = await openOwn();
+        await click(opened.harness, opened.root, 'thread-detail-delete-button');
+        await click(opened.harness, opened.root, 'thread-detail-delete-confirm-button');
+        (await nextRequest(opened.http, { method: 'DELETE', url: '/api/threads/7' })).flush(null, {
+          status,
+          statusText: 'Error',
+        });
+        // nicht settle(): Bei 409 hielten die Neulade-Anfragen die App instabil
+        await new Promise((resolve) => setTimeout(resolve));
+        opened.harness.detectChanges();
+        return opened;
+      }
+
+      it('sollte auf die Anmeldung verweisen, wenn die Sitzung abgelaufen ist', async () => {
+        const { root } = await deleteWith(401);
+
+        expect(text(root, 'thread-detail-session-expired-text')).toBe(
+          'Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.',
+        );
+        expect(element(root, 'thread-detail-login-link')?.getAttribute('href')).toBe('/anmelden');
+      });
+
+      it('sollte „Diesen Thread gibt es nicht mehr.“ zeigen, wenn das System mit 404 antwortet', async () => {
+        const { root } = await deleteWith(404);
+
+        expect(text(root, 'thread-detail-action-error-message')).toBe(
+          'Diesen Thread gibt es nicht mehr.',
+        );
+      });
+
+      it('sollte eine allgemeine Meldung zeigen, wenn ein unerwarteter Fehler auftritt', async () => {
+        const { root } = await deleteWith(500);
+
+        expect(text(root, 'thread-detail-action-error-message')).toBe(
+          'Änderung konnte nicht gespeichert werden. Bitte versuche es später erneut.',
+        );
+      });
+
+      it('sollte Thread und Beiträge neu laden, wenn inzwischen jemand geantwortet hat', async () => {
+        const { harness, root, http } = await deleteWith(409);
+
+        (await nextRequest(http, '/api/threads/7')).flush(OWN);
+        (await nextRequest(http, '/api/threads/7/posts?page=0')).flush(ANSWERED);
+        await settle(harness);
+
+        expect(element(root, 'thread-detail-locked-hint')).not.toBeNull();
+      });
+    });
+
+    describe('Beiträge bearbeiten und löschen', () => {
+      /** Klickt einen Button am Beitrag mit dem angegebenen Inhalt */
+      async function clickAt(
+        harness: RouterTestingHarness,
+        root: HTMLElement,
+        content: string,
+        testId: string,
+      ) {
+        const item = Array.from(all(root, 'post-list-post-item')).find((li) =>
+          li.textContent?.includes(content),
+        )!;
+        item.querySelector<HTMLElement>(`[data-testid="${testId}"]`)!.click();
+        harness.detectChanges();
+        await new Promise((resolve) => setTimeout(resolve));
+        harness.detectChanges();
+      }
+
+      it('sollte dieselbe Seite ohne die gelöschte Antwort zeigen, wenn eine Antwort gelöscht wird', async () => {
+        const OWN_REPLY: PostPage = {
+          content: [post(70, 'Eröffnungspost'), post(71, 'Meine Antwort', false, 'lena')],
+          page: { size: 20, number: 0, totalElements: 2, totalPages: 1 },
+        };
+        const opened = await open('/threads/7', [signedIn('USER')]);
+        opened.http.expectOne('/api/threads/7').flush(DETAILS);
+        opened.http.expectOne('/api/threads/7/posts?page=0').flush(OWN_REPLY);
+        await opened.harness.fixture.whenStable();
+        const { harness, root, http, router } = opened;
+
+        await clickAt(harness, root, 'Meine Antwort', 'post-item-delete-button');
+        await clickAt(harness, root, 'Meine Antwort', 'post-item-delete-confirm-button');
+        (await nextRequest(http, { method: 'DELETE', url: '/api/threads/7/posts/71' })).flush(
+          null,
+          {
+            status: 204,
+            statusText: 'No Content',
+          },
+        );
+        (await nextRequest(http, '/api/threads/7/posts?page=0')).flush({
+          content: [post(70, 'Eröffnungspost')],
+          page: { size: 20, number: 0, totalElements: 1, totalPages: 1 },
+        });
+        await settle(harness);
+
+        expect(router.url).toBe('/threads/7');
+        expect(contents(root)).toEqual(['Eröffnungspost']);
+      });
+
+      it('sollte die vorherige Seite zeigen, wenn die einzige Antwort einer Seite gelöscht wird', async () => {
+        const opened = await open('/threads/7?seite=2', [signedIn('USER')]);
+        opened.http.expectOne('/api/threads/7').flush(DETAILS);
+        opened.http.expectOne('/api/threads/7/posts?page=1').flush({
+          content: [post(91, 'Einzige auf Seite 2', false, 'lena')],
+          page: { size: 20, number: 1, totalElements: 21, totalPages: 2 },
+        });
+        await opened.harness.fixture.whenStable();
+        const { harness, root, http, router } = opened;
+
+        await clickAt(harness, root, 'Einzige auf Seite 2', 'post-item-delete-button');
+        await clickAt(harness, root, 'Einzige auf Seite 2', 'post-item-delete-confirm-button');
+        (await nextRequest(http, { method: 'DELETE', url: '/api/threads/7/posts/91' })).flush(
+          null,
+          {
+            status: 204,
+            statusText: 'No Content',
+          },
+        );
+        (await nextRequest(http, '/api/threads/7/posts?page=1')).flush({
+          content: [],
+          page: { size: 20, number: 1, totalElements: 20, totalPages: 1 },
+        });
+        (await nextRequest(http, '/api/threads/7/posts?page=0')).flush(POSTS);
+        await settle(harness);
+
+        expect(router.url).toBe('/threads/7');
+      });
+
+      it('sollte am Eröffnungsbeitrag keine Buttons zeigen, weil sie im Thread-Kopf stehen', async () => {
+        const { root } = await openOwn();
+
+        expect(all(root, 'post-item-edit-button')).toHaveLength(0);
+        expect(all(root, 'post-item-delete-button')).toHaveLength(0);
+        expect(element(root, 'thread-detail-edit-button')).not.toBeNull();
+      });
+
+      it('sollte die Beiträge neu laden, wenn eine Antwort bearbeitet wurde', async () => {
+        const OWN_REPLY: PostPage = {
+          content: [post(70, 'Eröffnungspost'), post(71, 'Meine Antwort', false, 'lena')],
+          page: { size: 20, number: 0, totalElements: 2, totalPages: 1 },
+        };
+        const opened = await open('/threads/7', [signedIn('USER')]);
+        opened.http.expectOne('/api/threads/7').flush(DETAILS);
+        opened.http.expectOne('/api/threads/7/posts?page=0').flush(OWN_REPLY);
+        await opened.harness.fixture.whenStable();
+        const { harness, root, http } = opened;
+
+        await clickAt(harness, root, 'Meine Antwort', 'post-item-edit-button');
+        element(root, 'post-edit-form-save-button')!.click();
+        (await nextRequest(http, { method: 'PUT', url: '/api/threads/7/posts/71' })).flush(null, {
+          status: 204,
+          statusText: 'No Content',
+        });
+        (await nextRequest(http, '/api/threads/7/posts?page=0')).flush({
+          ...OWN_REPLY,
+          content: [
+            OWN_REPLY.content[0],
+            { ...OWN_REPLY.content[1], editedAt: '2026-10-24T10:00:00Z' },
+          ],
+        });
+        await settle(harness);
+
+        expect(element(root, 'post-item-edited-text')).not.toBeNull();
+      });
     });
   });
 });

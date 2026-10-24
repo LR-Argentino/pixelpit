@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { Post, PostPage } from '../../../core/forum/model/post';
 import { PostList } from './post-list';
@@ -29,6 +31,7 @@ interface Inputs {
   failed?: boolean;
   currentPage?: number;
   threadAuthor?: string;
+  username?: string | null;
 }
 
 async function render({
@@ -37,10 +40,11 @@ async function render({
   failed = false,
   currentPage = 1,
   threadAuthor = 'blackbird',
+  username = null,
 }: Inputs) {
   TestBed.configureTestingModule({
     imports: [PostList],
-    providers: [provideRouter([])],
+    providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
   });
   const fixture = TestBed.createComponent(PostList);
   fixture.componentRef.setInput('postPage', postPage);
@@ -49,6 +53,7 @@ async function render({
   fixture.componentRef.setInput('currentPage', currentPage);
   fixture.componentRef.setInput('threadId', 7);
   fixture.componentRef.setInput('threadAuthor', threadAuthor);
+  fixture.componentRef.setInput('username', username);
   await fixture.whenStable();
   return { fixture, root: fixture.nativeElement as HTMLElement };
 }
@@ -174,5 +179,41 @@ describe('PostList', () => {
 
     expect(text(root, 'post-list-loading-text')).toBe('Beiträge werden geladen …');
     expect(element(root, 'post-list-loading-text')?.getAttribute('role')).toBe('status');
+  });
+
+  describe('Bearbeiten und Löschen', () => {
+    const replies = [
+      post(1, 'Eröffnungspost', 'lena'),
+      post(2, 'Antwort von kiwi', 'kiwi'),
+      post(3, 'Nachtrag von lena', 'lena'),
+    ];
+
+    it('sollte Bearbeiten nur an den Antworten des angemeldeten Nutzers zeigen', async () => {
+      const { root } = await render({ postPage: postPage(replies), username: 'lena' });
+
+      expect(marked(root, 'post-item-edit-button')).toEqual([false, false, true]);
+    });
+
+    it('sollte an keinem Beitrag Bearbeiten zeigen, wenn ein Gast die Seite sieht', async () => {
+      const { root } = await render({ postPage: postPage(replies) });
+
+      expect(marked(root, 'post-item-edit-button')).toEqual([false, false, false]);
+    });
+
+    it('sollte am Eröffnungsbeitrag keine Buttons zeigen, auch wenn er vom angemeldeten Nutzer ist', async () => {
+      const { root } = await render({ postPage: postPage(replies), username: 'lena' });
+
+      expect(marked(root, 'post-item-delete-button')).toEqual([false, false, true]);
+    });
+
+    it('sollte auf einer späteren Seite den ersten Beitrag änderbar zeigen, wenn er vom angemeldeten Nutzer ist', async () => {
+      const { root } = await render({
+        postPage: postPage(replies, 2, 2),
+        currentPage: 2,
+        username: 'lena',
+      });
+
+      expect(marked(root, 'post-item-edit-button')).toEqual([true, false, true]);
+    });
   });
 });

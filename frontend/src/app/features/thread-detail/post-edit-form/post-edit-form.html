@@ -1,0 +1,67 @@
+<form class="flex flex-col gap-3" (submit)="onSubmit($event)">
+  <div>
+    <label
+      [for]="'post-edit-form-content-' + post().id"
+      class="sr-only"
+      data-testid="post-edit-form-content-label-text"
+    >
+      Text des Beitrags
+    </label>
+    <textarea
+      [id]="'post-edit-form-content-' + post().id"
+      [formField]="editForm.content"
+      rows="6"
+      data-testid="post-edit-form-content-input"
+      [attr.aria-describedby]="'post-edit-form-content-errors-' + post().id"
+      appInput
+    ></textarea>
+    <app-field-errors
+      [field]="editForm.content"
+      [show]="editForm.content().invalid() && editForm.content().touched()"
+      [errorId]="'post-edit-form-content-errors-' + post().id"
+      testId="post-edit-form-content-error-message"
+    />
+  </div>
+  <div class="flex items-center gap-3">
+    <button
+      appButton
+      size="sm"
+      type="submit"
+      data-testid="post-edit-form-save-button"
+      [disabled]="contentInvalid() || editForm().submitting()"
+    >
+      {{ editForm().submitting() ? 'Wird gespeichert …' : 'Speichern' }}
+    </button>
+    <button
+      appButton
+      variant="secondary"
+      size="sm"
+      type="button"
+      (click)="cancelled.emit()"
+      data-testid="post-edit-form-cancel-button"
+    >
+      Abbrechen
+    </button>
+  </div>
+  @for (error of editForm().errors(); track error.kind) {
+    @if (error.kind === 'sessionExpired') {
+      <div role="alert" class="text-[13px] leading-[1.4] text-danger">
+        <span data-testid="post-edit-form-session-expired-text">{{ error.message }}</span>
+        <a
+          routerLink="/anmelden"
+          class="ml-1 rounded-[2px] text-white underline focus-ring"
+          data-testid="post-edit-form-login-link"
+          >Zur Anmeldung</a
+        >
+      </div>
+    } @else {
+      <div
+        role="alert"
+        class="text-[13px] leading-[1.4] text-danger"
+        data-testid="post-edit-form-error-message"
+      >
+        {{ error.message }}
+      </div>
+    }
+  }
+</form>

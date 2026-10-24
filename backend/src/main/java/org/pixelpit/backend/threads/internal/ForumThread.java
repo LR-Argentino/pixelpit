@@ -63,4 +63,18 @@ public class ForumThread {
         thread.categories.addAll(categories);
         return thread;
     }
+
+    /** Ersetzt Titel und Kategorien; Ersteller, Erstellzeitpunkt und Lösung bleiben. */
+    public void edit(String title, Collection<Category> categories) {
+        this.title = title;
+        this.categories.clear();
+        this.categories.addAll(categories);
+        this.updatedAt = Instant.now();
+    }
+
+    /** Soft Delete: Der Thread bleibt in der Datenbank, ist aber für alle unsichtbar. */
+    public void delete(int profileId) {
+        this.deletedAt = Instant.now();
+        this.deletedBy = profileId;
+    }
 }

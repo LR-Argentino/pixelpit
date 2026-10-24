@@ -2,6 +2,9 @@ package org.pixelpit.backend.threads;
 
 import lombok.RequiredArgsConstructor;
 import org.pixelpit.backend.profile.ProfileLookUp;
+import org.pixelpit.backend.threads.exceptions.NotContentOwnerException;
+import org.pixelpit.backend.threads.exceptions.PostNotFoundException;
+import org.pixelpit.backend.threads.exceptions.ThreadHasRepliesException;
 import org.pixelpit.backend.threads.exceptions.ThreadNotFoundException;
 import org.pixelpit.backend.threads.exceptions.UnknownCategoryException;
 import org.pixelpit.backend.threads.internal.AttachmentRepository;
@@ -43,25 +46,73 @@ public class ForumThreadManagement {
         // Jeder Account hat ein Profil: Es entsteht synchron in derselben Transaktion wie der Account
         Integer profileId = profileLookUp.findProfileIdByAccountId(accountId)
                 .orElseThrow(() -> new IllegalStateException("Kein Profil für Account " + accountId));
-        List<Category> categories = categoryRepository.findAllById(categoryIds);
-        if (categories.size() != categoryIds.size()) {
-            Set<Integer> unknown = new TreeSet<>(categoryIds);
-            categories.forEach(category -> unknown.remove(category.getId()));
-            throw new UnknownCategoryException(unknown);
-        }
+        List<Category> categories = findCategories(categoryIds);
         ForumThread thread = forumThreadRepository.save(ForumThread.open(title, profileId, categories));
         postRepository.save(Post.opening(thread, content, profileId));
         return thread.getId();
     }
 
+    /**
+     * Ersetzt Titel, Kategorien und den Text des Eröffnungsposts eines eigenen Threads, solange niemand geantwortet
+     * hat. Der Eröffnungspost gilt nur dann als bearbeitet, wenn sich sein Text wirklich ändert.
+     */
+    @Transactional
+    public void updateThread(int accountId, int threadId, String title, String content, Set<Integer> categoryIds) {
+        ForumThread thread = lockVisibleThread(threadId);
+        requireOwner(thread.getCreatedBy(), profileIdOf(accountId));
+        requireNoReplies(threadId);
+        thread.edit(title, findCategories(categoryIds));
+        // Ein sichtbarer Thread hat immer einen sichtbaren Eröffnungspost (VISIBLE)
+        Post opening = findVisiblePost(threadId, postRepository.findOpeningPostId(threadId));
+        if (!opening.getContent().equals(content)) {
+            opening.edit(content);
+        }
+    }
+
+    /** Löscht einen eigenen Thread (Soft Delete), solange niemand geantwortet hat. */
+    @Transactional
+    public void deleteThread(int accountId, int threadId) {
+        ForumThread thread = lockVisibleThread(threadId);
+        int profileId = profileIdOf(accountId);
+        requireOwner(thread.getCreatedBy(), profileId);
+        requireNoReplies(threadId);
+        thread.delete(profileId);
+    }
+
+    /** Ersetzt den Text eines eigenen Posts; für den Eröffnungspost gilt die Sperre des Threads. */
+    @Transactional
+    public void updatePost(int accountId, int threadId, int postId, String content) {
+        lockVisibleThread(threadId);
+        Post post = findVisiblePost(threadId, postId);
+        requireOwner(post.getCreatedBy(), profileIdOf(accountId));
+        if (isOpeningPost(threadId, postId)) {
+            requireNoReplies(threadId);
+        }
+        post.edit(content);
+    }
+
+    /** Löscht einen eigenen Post (Soft Delete); den Eröffnungspost zu löschen löscht den ganzen Thread. */
+    @Transactional
+    public void deletePost(int accountId, int threadId, int postId) {
+        ForumThread thread = lockVisibleThread(threadId);
+        Post post = findVisiblePost(threadId, postId);
+        int profileId = profileIdOf(accountId);
+        requireOwner(post.getCreatedBy(), profileId);
+        if (isOpeningPost(threadId, postId)) {
+            requireNoReplies(threadId);
+            // Nur der Thread wird markiert: ein Löschkennzeichen pro Thread, VISIBLE deckt beide Fälle ab
+            thread.delete(profileId);
+        } else {
+            post.delete(profileId);
+        }
+    }
+
     /** Hängt einen Post an einen sichtbaren Thread an und liefert die ID des Posts. */
     @Transactional
     public int createPost(int accountId, int threadId, String content) {
-        findVisibleThread(threadId);
-        Integer profileId = profileLookUp.findProfileIdByAccountId(accountId)
-                .orElseThrow(() -> new IllegalStateException("Kein Profil für Account " + accountId));
-        ForumThread thread = forumThreadRepository.getReferenceById(threadId);
-        return postRepository.save(Post.reply(thread, content, profileId)).getId();
+        // Sperre statt nur prüfen: Sonst kann der Thread zwischen Prüfung und INSERT gelöscht werden
+        ForumThread thread = lockVisibleThread(threadId);
+        return postRepository.save(Post.reply(thread, content, profileIdOf(accountId))).getId();
     }
 
     @Transactional(readOnly = true)
@@ -119,6 +170,56 @@ public class ForumThreadManagement {
     private ThreadDetails findVisibleThread(int threadId) {
         return forumThreadRepository.findVisibleDetails(threadId)
                 .orElseThrow(() -> new ThreadNotFoundException(threadId));
+    }
+
+    /**
+     * Erster Schritt jedes Schreibpfads eines Threads: erst sperren, dann die Sichtbarkeit prüfen. Nach dem Warten
+     * auf die Sperre liest die Prüfung den Stand, den der vorherige Schreiber committet hat.
+     */
+    private ForumThread lockVisibleThread(int threadId) {
+        ForumThread thread = forumThreadRepository.findByIdForUpdate(threadId)
+                .orElseThrow(() -> new ThreadNotFoundException(threadId));
+        findVisibleThread(threadId);
+        return thread;
+    }
+
+    /** Ein Post eines anderen Threads ergibt dasselbe wie ein unbekannter oder gelöschter Post. */
+    private Post findVisiblePost(int threadId, int postId) {
+        return postRepository.findById(postId)
+                .filter(post -> post.getThread().getId() == threadId && post.getDeletedAt() == null)
+                .orElseThrow(() -> new PostNotFoundException(postId));
+    }
+
+    private boolean isOpeningPost(int threadId, int postId) {
+        return Objects.equals(postRepository.findOpeningPostId(threadId), postId);
+    }
+
+    private int profileIdOf(int accountId) {
+        return profileLookUp.findProfileIdByAccountId(accountId)
+                .orElseThrow(() -> new IllegalStateException("Kein Profil für Account " + accountId));
+    }
+
+    private static void requireOwner(Integer createdBy, int profileId) {
+        if (!Objects.equals(createdBy, profileId)) {
+            throw new NotContentOwnerException();
+        }
+    }
+
+    /** Jede sichtbare Antwort sperrt Thread und Eröffnungspost, auch eine des Erstellers selbst. */
+    private void requireNoReplies(int threadId) {
+        if (postRepository.existsVisibleReply(threadId)) {
+            throw new ThreadHasRepliesException(threadId);
+        }
+    }
+
+    private List<Category> findCategories(Set<Integer> categoryIds) {
+        List<Category> categories = categoryRepository.findAllById(categoryIds);
+        if (categories.size() != categoryIds.size()) {
+            Set<Integer> unknown = new TreeSet<>(categoryIds);
+            categories.forEach(category -> unknown.remove(category.getId()));
+            throw new UnknownCategoryException(unknown);
+        }
+        return categories;
     }
 
     /** Kategorien aller übergebenen Threads mit einer Abfrage; die Reihenfolge der Abfrage (nach Name) bleibt erhalten. */

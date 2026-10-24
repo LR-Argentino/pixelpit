@@ -1,0 +1,111 @@
+<nav
+  aria-label="Brotkrumen"
+  class="mb-[18px] flex items-center gap-2.5 text-[13px] leading-none text-ink-200"
+>
+  <span>Administration</span><span aria-hidden="true">/</span
+  ><span class="text-white" aria-current="page">Benutzer</span>
+</nav>
+
+<h1
+  class="m-0 text-[44px] leading-[1.04] font-bold tracking-[-.025em] text-white"
+  data-testid="user-management-title-heading"
+>
+  Benutzerverwaltung
+</h1>
+<p class="mt-3 mb-0 max-w-[620px] text-[15px] leading-[1.55] text-pretty text-ink-100">
+  Rollen zuweisen: Moderatoren und Admins ernennen oder wieder zu Benutzern machen. Eine Änderung
+  gilt ab der nächsten Anmeldung des Mitglieds.
+</p>
+
+@if (error(); as message) {
+  <p
+    role="alert"
+    class="mt-6 mb-0 rounded-[3px] border border-danger/60 bg-danger/10 px-4 py-3 text-[13px] text-danger"
+    data-testid="user-management-error-text"
+  >
+    {{ message }}
+  </p>
+}
+
+<section
+  aria-labelledby="user-management-members-heading"
+  class="mt-7 rounded-[3px] border border-ink-550"
+>
+  <h2
+    id="user-management-members-heading"
+    class="m-0 border-b border-ink-550 bg-ink-725 px-4 py-[11px] text-[11px] leading-none font-bold tracking-[.08em] text-ink-200 uppercase"
+    data-testid="user-management-members-heading"
+  >
+    Mitglieder
+  </h2>
+
+  @if (accounts.error()) {
+    <div class="px-6 py-10 text-center">
+      <p
+        role="alert"
+        class="m-0 text-base font-bold text-white"
+        data-testid="user-management-load-error-text"
+      >
+        Mitglieder konnten nicht geladen werden
+      </p>
+      <button
+        type="button"
+        class="mt-4 cursor-pointer text-[13px] text-ink-100 underline hover:text-white"
+        (click)="accounts.reload()"
+        data-testid="user-management-retry-button"
+      >
+        Erneut versuchen
+      </button>
+    </div>
+  } @else if (accounts.value(); as page) {
+    @if (page.content.length === 0) {
+      <p
+        class="m-0 px-6 py-10 text-center text-[13px] text-ink-100"
+        data-testid="user-management-empty-text"
+      >
+        Auf dieser Seite gibt es keine Mitglieder.
+      </p>
+    } @else {
+      <ul class="m-0 list-none p-0">
+        @for (account of page.content; track account.accountId) {
+          <li
+            appUserRow
+            [account]="account"
+            [self]="account.accountId === ownAccountId()"
+            (roleChange)="changeRole(account, $event)"
+            data-testid="user-management-member-item"
+          ></li>
+        }
+      </ul>
+      <div
+        class="flex flex-wrap items-center justify-between gap-4 border-t border-ink-550 bg-ink-725 px-4 py-3"
+      >
+        <span
+          class="text-[13px] leading-none text-ink-200"
+          data-testid="user-management-range-text"
+        >
+          {{ range() }}
+        </span>
+        <app-pagination
+          [currentPage]="page.page.number + 1"
+          [totalPages]="page.page.totalPages"
+          link="/admin/benutzer"
+          ariaLabel="Seiten der Mitgliederliste"
+          previousLabel="Zurück"
+          nextLabel="Weiter"
+          testIdPrefix="user-management"
+          previousRole="newer"
+          nextRole="older"
+        />
+      </div>
+    }
+  } @else {
+    <p
+      role="status"
+      class="m-0 px-6 py-10 text-center text-[13px] text-ink-100"
+      data-testid="user-management-loading-text"
+    >
+      Mitglieder werden geladen …
+    </p>
+  }
+</section>

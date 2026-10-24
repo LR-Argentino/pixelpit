@@ -27,6 +27,9 @@ const MAIN_LINKS: MainLink[] = [
   { label: 'Meine Threads', icon: 'square-pen', path: '/meine-threads', membersOnly: true },
 ];
 
+// Nur für ADMIN sichtbar; die Seiten selbst schützt zusätzlich der adminGuard
+const ADMIN_LINKS: NavLink[] = [{ label: 'Benutzer', icon: 'users', path: '/admin/benutzer' }];
+
 const CATEGORY_ICONS: Record<string, IconName> = {
   engines: 'box',
   programmierung: 'code',
@@ -57,6 +60,9 @@ export class Sidebar {
       locked: guest && !!membersOnly,
     }));
   });
+
+  protected readonly isAdmin = computed(() => this.authService.currentUser()?.role === 'ADMIN');
+  protected readonly adminLinks = ADMIN_LINKS;
 
   protected readonly categoryLinks = computed<NavLink[]>(() =>
     this.forumService.categories().map((category) => ({

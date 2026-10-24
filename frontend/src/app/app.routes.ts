@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from './core/auth/admin-guard';
 import { Shell } from './layout/shell/shell';
 
 export const routes: Routes = [
@@ -29,6 +30,14 @@ export const routes: Routes = [
         path: 'profil',
         title: 'Mein Profil – PixelPit',
         loadComponent: () => import('./features/profile/profile').then((m) => m.Profile),
+      },
+      // ?seite= wird über withComponentInputBinding() gebunden; Nicht-Admins landen auf der Startseite
+      {
+        path: 'admin/benutzer',
+        title: 'Benutzerverwaltung – PixelPit',
+        canMatch: [adminGuard],
+        loadComponent: () =>
+          import('./features/admin/user-management/user-management').then((m) => m.UserManagement),
       },
     ],
   },

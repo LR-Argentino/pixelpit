@@ -46,6 +46,22 @@
   }
 </ul>
 
+@if (isAdmin()) {
+  <div class="-mx-[18px] my-3.5 h-px flex-none bg-ink-700"></div>
+
+  <h2
+    class="m-0 px-3 pt-1.5 pb-2 text-xs leading-none font-normal text-ink-200"
+    data-testid="sidebar-administration-heading"
+  >
+    Administration
+  </h2>
+  <ul class="m-0 list-none p-0">
+    @for (link of adminLinks; track link.label) {
+      <li appNavItem [link]="link" data-testid="sidebar-administration-item"></li>
+    }
+  </ul>
+}
+
 <div class="min-h-6 flex-1"></div>
 
 <div class="-mx-[18px] flex flex-col gap-2 border-t border-ink-700 px-[18px] pt-4">

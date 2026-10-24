@@ -2,13 +2,17 @@ package org.pixelpit.backend.account;
 
 import lombok.RequiredArgsConstructor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.pixelpit.backend.account.exceptions.AccountNotFoundException;
 import org.pixelpit.backend.account.exceptions.EmailAlreadyTakenException;
 import org.pixelpit.backend.account.exceptions.InvalidPasswordException;
+import org.pixelpit.backend.account.exceptions.OwnRoleChangeException;
 import org.pixelpit.backend.account.exceptions.PasswordMismatchException;
 import org.pixelpit.backend.account.internal.AccountRepository;
 import org.pixelpit.backend.account.web.CreateAccountRequest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +61,25 @@ public class AccountManagement {
 
         eventPublisher.publishEvent(new AccountDeleted(accountId));
         accountRepository.delete(account);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AccountSummary> listAccounts(Pageable pageable) {
+        return accountRepository.findAll(pageable).map(AccountSummary::from);
+    }
+
+    /** Die Regel gegen das Ändern der eigenen Rolle sorgt dafür, dass immer mindestens ein Admin übrig bleibt. */
+    @Transactional
+    public AccountSummary changeRole(int actingAccountId, int targetAccountId, Role role)
+            throws OwnRoleChangeException, AccountNotFoundException {
+        if (actingAccountId == targetAccountId) {
+            throw new OwnRoleChangeException();
+        }
+        Account account = accountRepository.findById(targetAccountId)
+                .orElseThrow(() -> new AccountNotFoundException(targetAccountId));
+
+        account.changeRole(role);
+        return AccountSummary.from(account);
     }
 
     private RuntimeException translate(DataIntegrityViolationException e, CreateAccountRequest request) {

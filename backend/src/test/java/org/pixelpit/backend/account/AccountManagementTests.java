@@ -8,7 +8,9 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.pixelpit.backend.account.exceptions.AccountNotFoundException;
 import org.pixelpit.backend.account.exceptions.EmailAlreadyTakenException;
+import org.pixelpit.backend.account.exceptions.OwnRoleChangeException;
 import org.pixelpit.backend.account.exceptions.InvalidPasswordException;
 import org.pixelpit.backend.account.exceptions.PasswordMismatchException;
 import org.pixelpit.backend.account.internal.AccountRepository;
@@ -170,6 +172,34 @@ public class AccountManagementTests {
 
         then(applicationEventPublisher).should(never()).publishEvent(any(AccountDeleted.class));
         then(accountRepository).should(never()).delete(any(Account.class));
+    }
+
+    @Test
+    void changeRole_throwsOwnRoleChangeException_whenActorIsTarget() {
+        thenThrownBy(() -> accountManagement.changeRole(7, 7, Role.USER))
+                .isInstanceOf(OwnRoleChangeException.class);
+
+        then(accountRepository).should(never()).findById(any());
+    }
+
+    @Test
+    void changeRole_throwsAccountNotFoundException_whenTargetMissing() {
+        given(accountRepository.findById(99)).willReturn(Optional.empty());
+
+        thenThrownBy(() -> accountManagement.changeRole(7, 99, Role.MODERATOR))
+                .isInstanceOf(AccountNotFoundException.class);
+    }
+
+    @Test
+    void changeRole_returnsUpdatedSummary_whenTargetExists() {
+        Account account = new Account("vera@mock.com", "hashed", Role.USER);
+        ReflectionTestUtils.setField(account, "id", 13);
+        given(accountRepository.findById(13)).willReturn(Optional.of(account));
+
+        AccountSummary summary = accountManagement.changeRole(7, 13, Role.MODERATOR);
+
+        assertThat(summary).isEqualTo(new AccountSummary(13, "vera@mock.com", Role.MODERATOR));
+        assertThat(account.getRole()).isEqualTo(Role.MODERATOR);
     }
 
     private void givenSaveAssignsId(int id) {

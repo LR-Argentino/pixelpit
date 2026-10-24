@@ -12,4 +12,5 @@ public interface ProfileRepository extends Repository<Profile, Integer> {
     Optional<Profile> findByUsername(String username);
     Optional<Profile> findByAccountId(Integer accountId);
     List<Profile> findByIdIn(Collection<Integer> ids);
+    List<Profile> findByAccountIdIn(Collection<Integer> accountIds);
 }

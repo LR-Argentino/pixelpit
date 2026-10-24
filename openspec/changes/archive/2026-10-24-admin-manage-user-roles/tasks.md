@@ -40,7 +40,7 @@
 
 ## 7. Integration
 
-- [ ] 7.1 Manuell prüfen: Ein Konto per SQL auf ADMIN setzen, einloggen, über die Sidebar zur Benutzerverwaltung gehen, einen USER zum Moderator machen, die eigene Zeile ist gesperrt, ein USER-Login sieht keinen Admin-Link und `/admin/benutzer` leitet auf `/` um
+- [x] 7.1 Manuell prüfen: Ein Konto per SQL auf ADMIN setzen, einloggen, über die Sidebar zur Benutzerverwaltung gehen, einen USER zum Moderator machen, die eigene Zeile ist gesperrt, ein USER-Login sieht keinen Admin-Link und `/admin/benutzer` leitet auf `/` um
 
 ## Workflow follow-up
 

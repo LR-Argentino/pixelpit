@@ -53,6 +53,15 @@
     <p class="m-0 text-xs leading-[1.4] text-ink-200" data-testid="sidebar-user-text">
       Angemeldet als <span class="font-semibold text-white">{{ user.username ?? user.email }}</span>
     </p>
+    <a
+      appButton
+      size="sm"
+      [fullWidth]="true"
+      routerLink="/profil"
+      data-testid="sidebar-profile-link"
+    >
+      Mein Profil
+    </a>
     <button
       appButton
       variant="secondary"

@@ -80,11 +80,34 @@ describe('Sidebar', () => {
       email: 'vera@studio.dev',
       username: 'voxelvera',
       role: 'USER',
+      threadCount: 0,
+      postCount: 0,
     });
 
     expect(root.querySelectorAll('[data-testid="nav-item-locked-hint"]').length).toBe(0);
     expect(root.querySelector('[data-testid="sidebar-user-text"]')?.textContent).toContain(
       'voxelvera',
     );
+  });
+
+  it('sollte angemeldeten Nutzern „Mein Profil“ mit Ziel /profil zeigen', async () => {
+    const root = await render({
+      accountId: 1,
+      email: 'vera@studio.dev',
+      username: 'voxelvera',
+      role: 'USER',
+      threadCount: 0,
+      postCount: 0,
+    });
+
+    const link = root.querySelector('[data-testid="sidebar-profile-link"]');
+    expect(link?.textContent?.trim()).toBe('Mein Profil');
+    expect(link?.getAttribute('href')).toBe('/profil');
+  });
+
+  it('sollte Gästen keinen Profil-Link zeigen', async () => {
+    const root = await render();
+
+    expect(root.querySelector('[data-testid="sidebar-profile-link"]')).toBeNull();
   });
 });

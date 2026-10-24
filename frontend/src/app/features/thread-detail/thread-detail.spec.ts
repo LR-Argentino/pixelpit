@@ -44,7 +44,14 @@ const NOT_FOUND = { status: 404, statusText: 'Not Found' };
 const SERVER_ERROR = { status: 500, statusText: 'Internal Server Error' };
 
 function signedIn(role: Role): Provider {
-  const user: CurrentUser = { accountId: 1, email: 'lena@example.org', username: 'lena', role };
+  const user: CurrentUser = {
+    accountId: 1,
+    email: 'lena@example.org',
+    username: 'lena',
+    role,
+    threadCount: 0,
+    postCount: 0,
+  };
   return {
     provide: AuthService,
     useValue: {

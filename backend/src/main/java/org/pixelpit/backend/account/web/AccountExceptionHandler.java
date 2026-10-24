@@ -1,6 +1,7 @@
 package org.pixelpit.backend.account.web;
 
 import org.pixelpit.backend.account.exceptions.EmailAlreadyTakenException;
+import org.pixelpit.backend.account.exceptions.InvalidPasswordException;
 import org.pixelpit.backend.account.exceptions.PasswordMismatchException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -29,6 +30,15 @@ public class AccountExceptionHandler {
     public ProblemDetail handlePasswordMismatchException(PasswordMismatchException e) {
         ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         problemDetail.setTitle("Passwörter stimmen nicht überein!");
+        problemDetail.setDetail(e.getMessage());
+        return problemDetail;
+    }
+
+    // 403 statt 401: der Nutzer ist angemeldet, ein 401 würde das Frontend als abgelaufene Session deuten
+    @ExceptionHandler(InvalidPasswordException.class)
+    public ProblemDetail handleInvalidPasswordException(InvalidPasswordException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
+        problemDetail.setTitle("Passwort ist falsch");
         problemDetail.setDetail(e.getMessage());
         return problemDetail;
     }

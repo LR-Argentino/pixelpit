@@ -28,6 +28,13 @@ public class ProfileManagement {
         }
     }
 
+    @Transactional
+    public void anonymize(Integer accountId) {
+        Profile profile = profileRepository.findByAccountId(accountId)
+                .orElseThrow(() -> new IllegalStateException("Kein Profil für Account " + accountId));
+        profile.anonymize();
+    }
+
     private RuntimeException translate(DataIntegrityViolationException e, String username) {
         if (e.getCause() instanceof ConstraintViolationException violation) {
             String constraint = violation.getConstraintName();

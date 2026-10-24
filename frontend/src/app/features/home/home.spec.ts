@@ -22,7 +22,14 @@ const PAGE: ThreadPage = {
 };
 
 function signedIn(role: Role): Provider {
-  const user: CurrentUser = { accountId: 1, email: 'lena@example.org', username: 'lena', role };
+  const user: CurrentUser = {
+    accountId: 1,
+    email: 'lena@example.org',
+    username: 'lena',
+    role,
+    threadCount: 0,
+    postCount: 0,
+  };
   return {
     provide: AuthService,
     useValue: {

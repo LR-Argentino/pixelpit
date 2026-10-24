@@ -9,6 +9,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.pixelpit.backend.account.exceptions.EmailAlreadyTakenException;
+import org.pixelpit.backend.account.exceptions.InvalidPasswordException;
 import org.pixelpit.backend.account.exceptions.PasswordMismatchException;
 import org.pixelpit.backend.account.internal.AccountRepository;
 import org.pixelpit.backend.account.web.CreateAccountRequest;
@@ -20,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.sql.SQLException;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
@@ -156,6 +158,18 @@ public class AccountManagementTests {
         then(accountRepository).should().save(accountArgumentCaptor.capture());
         then(applicationEventPublisher).should().publishEvent(any(AccountRegistered.class));
         assertThat(accountArgumentCaptor.getValue().getRole()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    void delete_throwsInvalidPassword_whenPasswordWrong() {
+        Account account = new Account("test@mock.com", "hashed", Role.USER);
+        given(accountRepository.findById(13)).willReturn(Optional.of(account));
+        given(passwordEncoder.matches("Falsch_123", "hashed")).willReturn(false);
+
+        thenThrownBy(() -> accountManagement.delete(13, "Falsch_123")).isInstanceOf(InvalidPasswordException.class);
+
+        then(applicationEventPublisher).should(never()).publishEvent(any(AccountDeleted.class));
+        then(accountRepository).should(never()).delete(any(Account.class));
     }
 
     private void givenSaveAssignsId(int id) {

@@ -5,4 +5,6 @@ export interface CurrentUser {
   email: string;
   username: string | null;
   role: Role;
+  threadCount: number;
+  postCount: number;
 }

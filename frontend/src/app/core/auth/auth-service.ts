@@ -35,4 +35,10 @@ export class AuthService {
     // Logout löscht das CSRF-Cookie → erneut abfragen, damit ein neues Token gesetzt wird
     await this.loadCurrentUser();
   }
+
+  public async deleteAccount(password: string): Promise<void> {
+    await firstValueFrom(this.http.delete<void>('/api/accounts/me', { body: { password } }));
+    // Das Backend beendet die Session → /me liefert 401 und setzt den Nutzer zurück
+    await this.loadCurrentUser();
+  }
 }

@@ -13,6 +13,8 @@ describe('AuthService', () => {
     email: 'test@mock.com',
     username: 'blackbird',
     role: 'USER',
+    threadCount: 0,
+    postCount: 0,
   };
 
   beforeEach(() => {
@@ -96,5 +98,36 @@ describe('AuthService', () => {
     await logout;
 
     expect(service.currentUser()).toBeNull();
+  });
+
+  it('deletes the account with the password and clears the user afterwards', async () => {
+    const loading = service.loadCurrentUser();
+    httpTesting.expectOne('/api/auth/me').flush(user);
+    await loading;
+
+    const deleting = service.deleteAccount('Sicher_1234');
+    const request = httpTesting.expectOne({ method: 'DELETE', url: '/api/accounts/me' });
+    expect(request.request.body).toEqual({ password: 'Sicher_1234' });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await Promise.resolve();
+    await Promise.resolve();
+    httpTesting.expectOne('/api/auth/me').flush(null, { status: 401, statusText: 'Unauthorized' });
+    await deleting;
+
+    expect(service.currentUser()).toBeNull();
+  });
+
+  it('rejects and keeps the user when the password is wrong', async () => {
+    const loading = service.loadCurrentUser();
+    httpTesting.expectOne('/api/auth/me').flush(user);
+    await loading;
+
+    const deleting = service.deleteAccount('Falsch_1234');
+    httpTesting
+      .expectOne('/api/accounts/me')
+      .flush({ title: 'Passwort ist falsch' }, { status: 403, statusText: 'Forbidden' });
+
+    await expect(deleting).rejects.toBeDefined();
+    expect(service.currentUser()).toEqual(user);
   });
 });

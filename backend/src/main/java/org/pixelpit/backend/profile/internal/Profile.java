@@ -42,4 +42,11 @@ public class Profile {
         this.accountId = accountId;
         this.username = username;
     }
+
+    /** Löst das Profil vom Account; Inhalte bleiben unter "deleted-<id>" erhalten. */
+    public void anonymize() {
+        this.accountId = null;
+        this.username = "deleted-" + id;
+        this.avatarFileId = null;
+    }
 }

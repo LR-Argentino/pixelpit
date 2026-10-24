@@ -3,6 +3,7 @@ package org.pixelpit.backend.account;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.pixelpit.backend.account.exceptions.EmailAlreadyTakenException;
+import org.pixelpit.backend.account.exceptions.InvalidPasswordException;
 import org.pixelpit.backend.account.exceptions.PasswordMismatchException;
 import org.pixelpit.backend.account.internal.AccountRepository;
 import org.pixelpit.backend.account.web.CreateAccountRequest;
@@ -42,6 +43,20 @@ public class AccountManagement {
             throw translate(e, request);
         }
 
+    }
+
+    /** Löscht den Account nach Passwortprüfung; das Profil wird per {@link AccountDeleted} in derselben Transaktion anonymisiert. */
+    @Transactional
+    public void delete(int accountId, String password) throws InvalidPasswordException {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalStateException("Kein Account " + accountId));
+
+        if (!passwordEncoder.matches(password, account.getPasswordHash())) {
+            throw new InvalidPasswordException();
+        }
+
+        eventPublisher.publishEvent(new AccountDeleted(accountId));
+        accountRepository.delete(account);
     }
 
     private RuntimeException translate(DataIntegrityViolationException e, CreateAccountRequest request) {

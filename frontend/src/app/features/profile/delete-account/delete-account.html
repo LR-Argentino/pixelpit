@@ -1,0 +1,81 @@
+<section class="mt-12 border-t border-ink-700 pt-8">
+  <h2 class="mt-0 mb-3 text-xs font-bold tracking-[.07em] text-ink-100 uppercase">Konto löschen</h2>
+
+  @if (!open()) {
+    <button
+      type="button"
+      appButton
+      variant="danger"
+      size="sm"
+      data-testid="delete-account-open-button"
+      (click)="open.set(true)"
+    >
+      Konto löschen
+    </button>
+  } @else {
+    <form class="flex max-w-[420px] flex-col gap-4" novalidate (submit)="onSubmit($event)">
+      <p class="m-0 text-[15px] leading-[1.4] text-ink-100" data-testid="delete-account-hint-text">
+        Dein Konto wird endgültig gelöscht. Deine Threads und Beiträge bleiben anonymisiert unter
+        „deleted-…“ erhalten.
+      </p>
+
+      <div>
+        <label
+          for="delete-account-password"
+          class="mb-2 block text-xs leading-none font-bold tracking-[.07em] text-ink-100 uppercase"
+        >
+          Passwort
+        </label>
+        <input
+          id="delete-account-password"
+          [formField]="deleteForm.password"
+          aria-describedby="delete-account-password-errors"
+          type="password"
+          data-testid="delete-account-password-input"
+          autocomplete="current-password"
+          placeholder="Dein Passwort"
+          appInput
+        />
+        <app-field-errors
+          [field]="deleteForm.password"
+          [show]="submitted() && deleteForm.password().invalid()"
+          errorId="delete-account-password-errors"
+          testId="delete-account-password-error-message"
+        />
+      </div>
+
+      @for (error of deleteForm().errors(); track error.kind) {
+        <div
+          role="alert"
+          class="text-[13px] leading-[1.4] text-danger"
+          data-testid="delete-account-error-text"
+        >
+          {{ error.message }}
+        </div>
+      }
+
+      <div class="flex gap-3">
+        <button
+          type="submit"
+          appButton
+          variant="danger"
+          size="sm"
+          data-testid="delete-account-confirm-button"
+          [disabled]="deleteForm().submitting()"
+        >
+          {{ deleteForm().submitting() ? 'Wird gelöscht …' : 'Endgültig löschen' }}
+        </button>
+        <button
+          type="button"
+          appButton
+          variant="ghost"
+          size="sm"
+          data-testid="delete-account-cancel-button"
+          (click)="cancel()"
+        >
+          Abbrechen
+        </button>
+      </div>
+    </form>
+  }
+</section>

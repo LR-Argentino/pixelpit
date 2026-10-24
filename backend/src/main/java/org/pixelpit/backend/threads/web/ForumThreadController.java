@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
-import org.pixelpit.backend.auth.AccountDetails;
+import org.pixelpit.backend.account.AccountDetails;
 import org.pixelpit.backend.threads.ForumThreadManagement;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PagedModel;

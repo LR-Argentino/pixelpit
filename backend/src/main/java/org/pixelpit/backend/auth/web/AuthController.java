@@ -4,8 +4,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.pixelpit.backend.auth.AccountDetails;
+import org.pixelpit.backend.account.AccountDetails;
 import org.pixelpit.backend.profile.ProfileLookUp;
+import org.pixelpit.backend.threads.ForumActivity;
+import org.pixelpit.backend.threads.ForumThreadManagement;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,6 +26,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final ProfileLookUp profileLookUp;
+    private final ForumThreadManagement forumThreadManagement;
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     @PostMapping("/login")
@@ -48,6 +51,8 @@ public class AuthController {
     @GetMapping("/me")
     public MeResponse me(@AuthenticationPrincipal AccountDetails me) {
         String username = profileLookUp.findUsernameByAccountId(me.getAccountId()).orElse(null);
-        return new MeResponse(me.getAccountId(), me.getEmail(), username, me.getRole());
+        ForumActivity activity = forumThreadManagement.countActivity(me.getAccountId());
+        return new MeResponse(me.getAccountId(), me.getEmail(), username, me.getRole(),
+                activity.threadCount(), activity.postCount());
     }
 }

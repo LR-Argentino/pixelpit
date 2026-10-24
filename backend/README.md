@@ -1,7 +1,7 @@
 # pixelpit – Backend
 
-Spring-Boot-Backend des Web-Forums. Authentifizierung und Rollen liegen bei Keycloak,
-das Backend läuft als OAuth2 Resource Server.
+Spring-Boot-Backend des Web-Forums. Authentifizierung läuft über Spring Security mit
+serverseitigem Session-Management (Session-Cookie), Accounts und Rollen liegen in der eigenen Datenbank.
 
 | | |
 |---|---|
@@ -10,10 +10,21 @@ das Backend läuft als OAuth2 Resource Server.
 | Spring Modulith | 2.1.1 |
 | Datenbank | PostgreSQL 18.4 (via Docker Compose) |
 | Migrationen | Liquibase |
-| Build | Maven Wrapper (`./mvnw`) |
+| Build | Maven Wrapper (`./mvnw`), Modul des Root-Aggregators `pixelpit/pom.xml` |
 
-> Stand: Das Modul ist noch ein Grundgerüst – es existiert nur `BackendApplication`.
-> Schema und Infrastruktur stehen bereits.
+### Module
+
+Das Backend ist mit Spring Modulith in fachliche Module unter `org.pixelpit.backend` geschnitten.
+Jedes Modul exportiert seine API im Wurzelpaket, Implementierung liegt in `internal`, REST-Controller in `web`.
+
+| Modul | Aufgabe | Endpunkte |
+|---|---|---|
+| `account` | Registrierung, Account löschen, Rollen-Enum `Role`; publiziert `AccountRegistered`/`AccountDeleted` | `/api/accounts` |
+| `auth` | Login/Logout, eingeloggter Nutzer (`UserService` als `UserDetailsService`) | `/api/auth` |
+| `profile` | Öffentliches Profil (Username), reagiert auf Account-Events, Anonymisierung beim Löschen | – |
+| `threads` | Threads, Beiträge und Kategorien inkl. Bearbeiten und Löschen | `/api/threads`, `/api/categories` |
+| `admin` | Admin-Dashboard: Accounts auflisten, Rollen ändern | `/api/admin/accounts` |
+| `configs` | Security, CORS, Argon2-Parameter | – |
 
 ---
 
@@ -22,6 +33,21 @@ das Backend läuft als OAuth2 Resource Server.
 - **JDK 25** (`<java.version>25</java.version>` in der `pom.xml`)
 - **Docker** inkl. **Docker Compose v2** – muss laufen, sowohl für den Start der App als auch für die Tests
 - Maven wird **nicht** lokal benötigt, der Wrapper `./mvnw` bringt alles mit
+
+---
+
+## IntelliJ-Setup
+
+Das Projekt wird über den **Repo-Root** `pixelpit/` geöffnet, nicht über `backend/`.
+Die `pom.xml` im Root ist ein reiner Aggregator (`packaging: pom`) mit den Modulen
+`backend` und `frontend`. Sie ist **nicht** der Parent des Backends –
+`backend/pom.xml` erbt weiterhin von `spring-boot-starter-parent`.
+
+Beim ersten Öffnen: Rechtsklick auf `pixelpit/pom.xml` → **Add as Maven Project**.
+Danach erscheinen beide Module im Maven-Tool-Fenster.
+
+`.idea/` und `*.iml` sind git-ignored – die Modulstruktur ergibt sich ausschließlich
+aus den `pom.xml`-Dateien.
 
 ---
 
@@ -82,7 +108,9 @@ kein `password` – im ganzen Repository nicht. Die Verbindung entsteht zur Lauf
 
 - **Das Arbeitsverzeichnis muss `backend/` sein.** `spring.docker.compose.file` ist nicht gesetzt,
   Boot sucht die Compose-Datei also relativ zum Arbeitsverzeichnis. Ein Start aus dem Repo-Root
-  findet sie nicht. In IntelliJ ist das Arbeitsverzeichnis des Moduls `backend` bereits korrekt.
+  findet sie nicht. Das gilt auch, wenn das Projekt in IntelliJ über den Root geöffnet ist:
+  In der Run-Konfiguration muss als Working Directory `backend/` (bzw. `$MODULE_WORKING_DIR$`)
+  eingetragen sein.
 - **Der Container läuft nach dem Beenden der App weiter.** `application.yaml` setzt
   `spring.docker.compose.lifecycle-management: start_only` – Boot startet den Stack, stoppt ihn
   aber nicht wieder. Zum Herunterfahren:
@@ -118,12 +146,33 @@ Das Schema wird ausschließlich über Liquibase verwaltet
 
 | Changeset | Legt an |
 |---|---|
-| `001-initial-schema.sql` | `files`, `categories`, `profiles`, `threads`, `posts`, `threads_categories`, `attachments` |
+| `001-initial-schema.sql` | `files`, `categories`, `accounts`, `profiles`, `threads`, `posts`, `threads_categories`, `attachments` |
 | `002-modulith-event-publication.sql` | `event_publication` – die Event-Publication-Registry von Spring Modulith (die JPA-Variante legt die Tabelle nicht selbst an) |
+| `003-modulith-event-publication-archive.sql` | `event_publication_archive` – Archiv abgeschlossener Events (`completion-mode: archive`) |
+| `004-seed-categories.sql` | Feste Kategorien `Engines`, `Programmierung`, `Showcase`, `Off-Topic` |
 
-Es gibt bewusst **keine** `accounts`- oder `roles`-Tabellen: Authentifizierung und
-Rollenvergabe (RBAC) übernimmt Keycloak. `profiles.keycloak_user_id` ist die Klammer
-zwischen Keycloak-Nutzer und öffentlichem Forumsprofil.
+`accounts` enthält die Login-Daten (E-Mail, Argon2-Passwort-Hash) und die Rolle als Spalte
+(`USER`, `MODERATOR`, `ADMIN` – entspricht dem Java-Enum `Role`). Eine separate `roles`-Tabelle
+gibt es nicht. `profiles.account_id` verknüpft den Account mit dem öffentlichen Forumsprofil
+(Username, Avatar); bei Anonymisierung wird sie auf `NULL` gesetzt.
+
+---
+
+## Authentifizierung & Session
+
+Das Backend nutzt klassisches **Session-Management** von Spring Security, keine Tokens:
+
+1. `POST /api/auth/login` nimmt Username **oder** E-Mail plus Passwort entgegen.
+   `UserService` sucht den Account, das Passwort wird mit dem `Argon2PasswordEncoder` geprüft.
+2. Bei Erfolg wird die Session-ID gewechselt (Schutz vor Session Fixation) und der
+   `SecurityContext` in der HTTP-Session gespeichert.
+3. Der Browser schickt ab dann das Session-Cookie mit (`http-only`, `same-site: lax`,
+   Timeout 30 Minuten – siehe `server.servlet.session` in `application.yaml`).
+4. `POST /api/auth/logout` beendet die Session, `GET /api/auth/me` liefert den eingeloggten Nutzer.
+
+CSRF-Schutz ist für die SPA aktiv (`CsrfConfigurer::spa`): Das Frontend sendet den Token im
+Header `X-XSRF-TOKEN`. Die Autorisierung steht in `SecurityConfig` – Lesen von Threads und
+Kategorien ist öffentlich, `/api/admin/**` erfordert die Rolle `ADMIN`, alles andere einen Login.
 
 Die Daten liegen im benannten Volume `pgdata` und überleben ein `docker compose down`.
 Für einen komplett frischen Stand `docker compose down -v` verwenden – dann laufen beim
@@ -150,9 +199,22 @@ bei jedem Start leer. Main-Klasse dafür ist `org.pixelpit.backend.TestBackendAp
 
 ## Build
 
+Nur das Backend, aus `backend/`:
+
 ```bash
 ./mvnw clean package     # ausführbares JAR nach target/
 ```
+
+Backend **und** Frontend zusammen, aus dem Repo-Root:
+
+```bash
+backend/mvnw clean package
+```
+
+Der Maven-Wrapper liegt nur in `backend/`, deshalb der Aufruf über `backend/mvnw`.
+Das Frontend-Modul (`frontend/pom.xml`) nutzt das `frontend-maven-plugin`: Es lädt eine
+gepinnte Node/npm-Version nach `frontend/target/` und führt `npm install` und `npm run build` aus.
+Ein lokal installiertes Node ist für den Maven-Build daher nicht nötig.
 
 ---
 
@@ -161,6 +223,7 @@ bei jedem Start leer. Main-Klasse dafür ist `org.pixelpit.backend.TestBackendAp
 - [Spring Boot – Docker Compose Support](https://docs.spring.io/spring-boot/4.1.1/reference/features/dev-services.html#features.dev-services.docker-compose)
 - [Spring Boot – Testcontainers Support](https://docs.spring.io/spring-boot/4.1.1/reference/testing/testcontainers.html#testing.testcontainers)
 - [Spring Boot – Liquibase](https://docs.spring.io/spring-boot/4.1.1/how-to/data-initialization.html#howto.data-initialization.migration-tool.liquibase)
-- [Spring Boot – OAuth2 Resource Server](https://docs.spring.io/spring-boot/4.1.1/reference/web/spring-security.html#web.security.oauth2.server)
+- [Spring Security – Session Management](https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html)
+- [Spring Security – CSRF für Single-Page-Apps](https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#csrf-integration-javascript-spa)
 - [Spring Modulith Reference](https://docs.spring.io/spring-modulith/reference/)
 - [PostgreSQL Docker Image](https://hub.docker.com/_/postgres)

@@ -57,7 +57,7 @@ Die bearbeitbaren Diagramme liegen als draw.io-Dateien in [`docs/`](docs/):
 | Backend | Java 25, Spring Boot 4.1, Spring Modulith 2.1, Spring Security, Spring Data JPA |
 | Datenbank | PostgreSQL 18.4 (Docker Compose), Schema-Migrationen mit Liquibase |
 | Sicherheit | Session-Login (HttpOnly-Cookie), CSRF-Token, Argon2-Passwort-Hashing, Bean Validation |
-| Tests | JUnit 5 + Testcontainers (Backend), Vitest (Frontend-Unit), Playwright (E2E) |
+| Tests | JUnit 5 + Testcontainers (Backend), Vitest (Frontend-Unit) |
 | Build | Maven Wrapper, Angular CLI / npm |
 
 ## Projektstruktur
@@ -70,8 +70,8 @@ pixelpit/
 │   ├── db/dev-seed.sql                    optionale Testdaten
 │   └── compose.yaml                       PostgreSQL-Container
 ├── frontend/     Angular-SPA (Port 4200, Proxy /api → 8081)
-│   ├── src/app/{core,features,layout,shared}
-│   └── e2e/                               Playwright-Tests
+│   └── src/app/{core,features,layout,shared}
+│  
 ├── docs/         Diagramme (draw.io) und Bilder
 └── openspec/     Spezifikationen und Änderungsvorschläge (OpenSpec)
 ```
@@ -148,7 +148,7 @@ Danach ab- und wieder anmelden. Der Menüpunkt **Benutzer** erscheint in der Sid
 | `./mvnw test` (backend) | Unit-Tests und Modulith-Strukturtest |
 | `./mvnw verify` (backend) | zusätzlich Integrationstests (`*IT`) gegen PostgreSQL via Testcontainers |
 | `npm test` (frontend) | Unit-Tests der Komponenten und Services (Vitest) |
-| `npm run e2e` (frontend) | Playwright-E2E-Tests; Backend und Frontend müssen laufen |
+
 
 ## Konfiguration
 

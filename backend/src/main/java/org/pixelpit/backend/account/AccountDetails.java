@@ -1,8 +1,6 @@
-package org.pixelpit.backend.auth;
+package org.pixelpit.backend.account;
 
 import lombok.Getter;
-import org.pixelpit.backend.account.Role;
-import org.pixelpit.backend.account.Account;
 import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,7 +27,7 @@ public final class AccountDetails implements UserDetails, CredentialsContainer {
         this.role = role;
     }
 
-    static AccountDetails from(Account account) {
+    public static AccountDetails from(Account account) {
         return new AccountDetails(account.getId(), account.getEmail(),
                 account.getPasswordHash(), account.getRole());
     }

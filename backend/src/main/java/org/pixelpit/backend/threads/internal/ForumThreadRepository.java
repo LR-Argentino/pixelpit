@@ -57,6 +57,10 @@ public interface ForumThreadRepository extends PagingAndSortingRepository<ForumT
             where t.id = :id and""" + VISIBLE)
     Optional<ThreadDetails> findVisibleDetails(@Param("id") int id);
 
+    /** Anzahl sichtbarer Threads eines Profils, z. B. für das eigene Profil. */
+    @Query("select count(t) from ForumThread t where t.createdBy = :profileId and" + VISIBLE)
+    long countVisibleByCreatedBy(@Param("profileId") int profileId);
+
     /** Kategorien aller übergebenen Threads mit einer Abfrage (kein N+1), alphabetisch nach Name. */
     @Query("""
             select t.id as threadId, c.id as id, c.name as name

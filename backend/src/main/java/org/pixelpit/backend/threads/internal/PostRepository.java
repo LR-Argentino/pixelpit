@@ -21,4 +21,11 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
             """,
             countQuery = "select count(p) from Post p where p.thread.id = :threadId and p.deletedAt is null")
     Page<Post> findVisibleByThreadId(@Param("threadId") int threadId, Pageable pageable);
+
+    /** Anzahl nicht gelöschter Posts eines Profils in sichtbaren Threads, Eröffnungsposts eingeschlossen. */
+    @Query("""
+            select count(p) from Post p
+            join p.thread t
+            where p.createdBy = :profileId and p.deletedAt is null and""" + ForumThreadRepository.VISIBLE)
+    long countVisibleByCreatedBy(@Param("profileId") int profileId);
 }

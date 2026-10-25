@@ -29,6 +29,9 @@
     <properties>
         <java.version>25</java.version>
         <spring-modulith.version>2.1.1</spring-modulith.version>
+        <gatling-plugin.version>4.21.12</gatling-plugin.version>
+        <gatling-high-charts.version>3.16.0</gatling-high-charts.version>
+        <postgresql.version>42.7.14</postgresql.version>
         <argLine></argLine>
     </properties>
     <dependencies>
@@ -84,7 +87,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.14</version>
+            <version>${postgresql.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -159,6 +162,12 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.gatling.highcharts</groupId>
+            <artifactId>gatling-charts-highcharts</artifactId>
+            <version>${gatling-high-charts.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -248,6 +257,11 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>io.gatling</groupId>
+                <artifactId>gatling-maven-plugin</artifactId>
+                <version>${gatling-plugin.version}</version>
             </plugin>
         </plugins>
     </build>

@@ -2,7 +2,7 @@
 
 PixelPit ist ein schlankes Webforum für eine Game-Dev-Community. Mitglieder können Threads eröffnen, darauf antworten und ihre eigenen Beiträge bearbeiten. Administrator:innen vergeben Rollen.
 
-Das Projekt entstand im Rahmen des IU-Kurses **DLBITPEWP01 – Projekt: Einstieg in die Web-Programmierung**.
+Das Projekt entstand im Rahmen des IU-Kurses, Projekt: Einstieg in die Web-Programmierung**.
 
 ---
 

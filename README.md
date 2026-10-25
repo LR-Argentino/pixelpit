@@ -45,9 +45,14 @@ Das Backend ist ein **modularer Monolith** auf Basis von Spring Modulith. Jedes 
 
 </details>
 
-Die bearbeitbaren Diagramme liegen als draw.io-Dateien in [`docs/`](docs/):
-- `pixelpit-backend-architektur.drawio`: Komponentendiagramm und Architekturskizze
-- `uml-use-case.drawio`: Use-Case-Diagramm, Aktivitätsdiagramme, Komponenten- und Klassendiagramm
+Alle bearbeitbaren Diagramme liegen in [`docs/pixelpit-diagramme.drawio`](docs/pixelpit-diagramme.drawio): Use-Case-Diagramm, Architekturskizze, Komponentendiagramm, ER-Diagramm und Aktivitätsdiagramme der zentralen Use Cases.
+
+<details>
+<summary>ER-Diagramm (Datenbankschema) anzeigen</summary>
+
+![ER-Diagramm](docs/images/er-diagramm.png)
+
+</details>
 
 ## Tech-Stack
 
